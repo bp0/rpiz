@@ -72,6 +72,11 @@ static gchar* rpiz_text_summary(void) {
         "");
 }
 
+struct {
+    gint timeout_id;
+    gint interval_ms;
+} refresh_timer;
+
 enum
 {
    BOARD_COL_KEY,
@@ -150,6 +155,7 @@ static void init_list_stores(void) {
 
 static void fill_board_list(void) {
     GtkTreeIter iter;
+    gtk_list_store_clear (board_store);
     char soc_temp[64];
     sprintf(soc_temp, "%0.2f' C", rpi_soc_temp() );
     BOARD_ADD("Board", rpi_board_desc(board) );
@@ -177,6 +183,7 @@ static void fill_board_list(void) {
 
 static void fill_cpu_list(void) {
     GtkTreeIter iter;
+    gtk_list_store_clear (cpu_store);
     int cores = 0, c = 0;
     char id[16] = "", cur[24] = "", min[24] = "", max[24] = "";
     cores = arm_proc_cores(proc);
@@ -205,7 +212,9 @@ static void fill_flags_list(void) {
     while(all_flags[i] != NULL) {
         if (g_strcmp0(all_flags[i], "") != 0) {
             present = arm_proc_has_flag(proc, all_flags[i]);
-            FLAGS_ADD(all_flags[i], present, arm_flag_meaning(all_flags[i]) );
+            if (present) {
+                FLAGS_ADD(all_flags[i], present, arm_flag_meaning(all_flags[i]) );
+            }
         }
         i++;
     }
@@ -222,6 +231,7 @@ static gboolean delete_event( GtkWidget *widget,
 static void destroy( GtkWidget *widget,
                      gpointer   data )
 {
+    g_source_remove(refresh_timer.timeout_id);
     rpiz_cleanup();
     gtk_main_quit();
 }
@@ -276,6 +286,14 @@ static void flags_view_init(void) {
     }
 }
 
+static gboolean refresh_data(gpointer data) {
+    data = data; /* to avoid a warning */
+    //printf("%0.2f' C\n", rpi_soc_temp() );
+    fill_board_list();
+    fill_cpu_list();
+    return G_SOURCE_CONTINUE;
+}
+
 int main( int   argc,
           char *argv[] )
 {
@@ -293,6 +311,9 @@ int main( int   argc,
 
     GtkTextBuffer *about_text_buffer = gtk_text_buffer_new (NULL);
     gtk_text_buffer_set_text (about_text_buffer, about_text, -1);
+
+    refresh_timer.interval_ms = 200;
+    refresh_timer.timeout_id = g_timeout_add(refresh_timer.interval_ms, refresh_data, NULL);
 
     /* GUI */
     GtkWidget *window;
