@@ -83,6 +83,10 @@ int main(void) {
 
     b = rpi_board_new();
     p = arm_proc_new();
+    if (b == NULL) {
+        printf("Scan board failed.\n");
+        return 1;
+    }
     if (p == NULL) {
         printf("Scan CPU failed.\n");
         return 1;
