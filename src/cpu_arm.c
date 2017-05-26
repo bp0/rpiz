@@ -82,6 +82,7 @@ static struct {
     char *code, *name;
 } tab_arm_implementer[] = {
     { "0x41",	"ARM" },
+    { "0x56",	"Marvell" },
     { NULL, NULL},
 };
 
@@ -114,33 +115,38 @@ const char *arm_arm_part(const char *code) {
 }
 
 #define CHECK_IMP(i) if (strcmp(imp, i) == 0)
-static char *gen_decoded_name(const char *imp, const char *arch, const char *part, const char *rev, const char *model_name) {
+static char *gen_decoded_name(const char *imp, const char *arch, const char *part, const char *var, const char *rev, const char *model_name) {
     char *dnbuff;
     char *imp_name = NULL, *part_desc = NULL;
+    int r = 0, p = 0;
     dnbuff = malloc(256);
     if (dnbuff) {
         memset(dnbuff, 0, 256);
 
         if (imp && arch && part && rev) {
+            /* http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0395b/CIHCAGHH.html
+             * variant and revision can be rendered r{variant}p{revision} */
+            r = strtol(var, NULL, 0);
+            p = strtol(rev, NULL, 0);
             imp_name = (char*) arm_implementer(imp);
             CHECK_IMP("0x41") {
                 part_desc = (char*) arm_arm_part(part);
             }
             if (imp_name || part_desc) {
-                sprintf(dnbuff, "%s %s rev %s (arch:%s)",
+                sprintf(dnbuff, "%s %s r%dp%d (arch:%s)",
                         (imp_name) ? imp_name : imp,
                         (part_desc) ? part_desc : part,
-                        rev, arch);
+                        r, p, arch);
             } else {
                 /* fallback for now */
-                sprintf(dnbuff, "%s [imp:%s part:%s rev:%s arch:%s]",
+                sprintf(dnbuff, "%s [imp:%s part:%s r%dp%d arch:%s]",
                         model_name,
                         (imp_name) ? imp_name : imp,
                         (part_desc) ? part_desc : part,
-                        rev, arch);
+                        r, p, arch);
             }
         } else {
-            /* prolly not ARM at all */
+            /* prolly not ARM arch at all */
             if (model_name)
                 sprintf(dnbuff, "%s", model_name);
             else {
@@ -401,7 +407,7 @@ static int scan_cpu(arm_proc* p) {
         /* decoded names */
         tmp_dn = gen_decoded_name(
                 p->cores[i].cpu_implementer, p->cores[i].cpu_architecture,
-                p->cores[i].cpu_part, p->cores[i].cpu_revision,
+                p->cores[i].cpu_part, p->cores[i].cpu_variant, p->cores[i].cpu_revision,
                 p->cores[i].model_name);
         p->cores[i].decoded_name = strlist_add(p->decoded_name, tmp_dn);
         free(tmp_dn); tmp_dn = NULL;
