@@ -271,12 +271,17 @@ static gboolean delete_event( GtkWidget *widget,
                               GdkEvent  *event,
                               gpointer   data )
 {
+    widget = widget; /* to avoid a warning */
+    event = event; /* to avoid a warning */
+    data = data; /* to avoid a warning */
     return FALSE;
 }
 
 static void destroy( GtkWidget *widget,
                      gpointer   data )
 {
+    widget = widget; /* to avoid a warning */
+    data = data; /* to avoid a warning */
     g_source_remove(refresh_timer.timeout_id);
     rpiz_cleanup();
     gtk_main_quit();
@@ -393,9 +398,11 @@ int main( int   argc,
 
     /* This packs the notebook into the window (a gtk container). */
     gtk_container_add (GTK_CONTAINER (window), notebook);
-    gtk_widget_show (notebook);    
+    gtk_widget_show (notebook);
+
+    gtk_window_resize (GTK_WINDOW (window), 450, 400);
     gtk_widget_show (window);
-    
+
     gtk_main ();
 
     return 0;
