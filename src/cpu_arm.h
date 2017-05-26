@@ -28,6 +28,7 @@ void arm_proc_free(arm_proc *);
 
 const char *arm_flag_meaning(const char *flag);
 
+const char *arm_proc_name(arm_proc *);
 const char *arm_proc_desc(arm_proc *);
 int arm_proc_cores(arm_proc *);
 int arm_proc_core_khz_min(arm_proc *, int core);

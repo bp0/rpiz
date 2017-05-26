@@ -54,6 +54,7 @@ static gchar* rpiz_text_summary(void) {
         "Memory (spec): %s\n"
         "SOC (spec): %s\n"
         "CPU: %s\n"
+        "CPU Description: %s\n"
         "SOC Temp: %0.2f C\n"
         "%s",
         rpi_board_desc(board),
@@ -65,6 +66,7 @@ static gchar* rpiz_text_summary(void) {
         rpi_board_serial(board),
         rpi_board_mem_spec(board),
         rpi_board_soc(board),
+        arm_proc_name(proc),
         arm_proc_desc(proc),
         rpi_soc_temp(),
         "");

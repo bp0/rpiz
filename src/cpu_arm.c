@@ -123,6 +123,7 @@ struct arm_proc {
     cpu_string_list *cpu_revision;
     cpu_string_list *cpukhz_max_str;
     
+    char cpu_name[256];
     char *cpu_desc;
     int max_khz;
     int core_count;
@@ -136,8 +137,10 @@ static int get_cpu_int(const char* file, int cpuid) {
     //DEBUG printf("get_cpu_int( %s , %d )\n", file, cpuid);
     snprintf(fn, 256, "/sys/devices/system/cpu/cpu%d/%s", cpuid, file);
     fc = get_file_contents(fn);
-    ret = atol(fc);
-    free(fc);
+    if (fc) {
+        ret = atol(fc);
+        free(fc);
+    }
     return ret;
 }
 
@@ -181,13 +184,17 @@ static char *strlist_add(cpu_string_list *list, const char* str) {
 }
 
 #define CHECK_FOR(k) if (strncmp(k, key, (strlen(k) < strlen(key)) ? strlen(k) : strlen(key)) == 0)
-#define CHECK_FOR_STR(k, s) CHECK_FOR(k) { p->cores[core].s = strlist_add(p->s, value); }
+#define CHECK_FOR_STR(k, s) CHECK_FOR(k) { p->cores[core].s = strlist_add(p->s, value); continue; }
+#define FIN_PROC() if (core >= 0) if (!p->cores[core].model_name) { p->cores[core].model_name = strlist_add(p->model_name, rep_pname); }
+
+#define REDUP(f) p->cores[i].f = strlist_add(p->f, p->cores[di].f)
 
 static int scan_cpu(arm_proc* p) {
     char *cpuinfo;
     kv_scan *kv; char *key, *value;
     int core = -1;
-    int i;
+    int i, di;
+    char rep_pname[256] = "";
     char tmp_maxfreq[128];
 
     if (!p) return 0;
@@ -199,22 +206,54 @@ static int scan_cpu(arm_proc* p) {
     if (kv) {
         while( kv_next(kv, &key, &value) ) {
             CHECK_FOR("processor") {
+                FIN_PROC();
                 core++;
+                memset(&p->cores[core], 0, sizeof(arm_core));
                 p->cores[core].id = atoi(value);
+                continue;
             }
-            CHECK_FOR_STR("model name", model_name);
-            CHECK_FOR_STR("Features", flags);
-            CHECK_FOR_STR("CPU implementer", cpu_implementer);
-            CHECK_FOR_STR("CPU architecture", cpu_architecture);
-            CHECK_FOR_STR("CPU variant", cpu_variant);
-            CHECK_FOR_STR("CPU part", cpu_part);
-            CHECK_FOR_STR("CPU revision", cpu_revision);            
+
+            CHECK_FOR("Processor") {
+                strcpy(rep_pname, value);
+                continue;
+            }
+
+            CHECK_FOR("Hardware") {
+                strcpy(p->cpu_name, value);
+                continue;
+            }
+
+            if (core >= 0) {
+                CHECK_FOR_STR("model name", model_name);
+                CHECK_FOR_STR("Features", flags);
+                CHECK_FOR_STR("CPU implementer", cpu_implementer);
+                CHECK_FOR_STR("CPU architecture", cpu_architecture);
+                CHECK_FOR_STR("CPU variant", cpu_variant);
+                CHECK_FOR_STR("CPU part", cpu_part);
+                CHECK_FOR_STR("CPU revision", cpu_revision);
+            }
         }
     }
+    FIN_PROC();
     kv_free(kv);
     free(cpuinfo);
 
     p->core_count = core + 1;
+
+    /* re-duplicate missing data for /proc/cpuinfo variant that de-duplicated it */
+    di = p->core_count - 1;
+    for (i = di; i >= 0; i--) {
+        if (p->cores[i].flags)
+            di = i;
+        else {
+            REDUP(flags);
+            REDUP(cpu_implementer);
+            REDUP(cpu_architecture);
+            REDUP(cpu_variant);
+            REDUP(cpu_part);
+            REDUP(cpu_revision);
+        }
+    }
 
     /* data not from /proc/cpuinfo */
     for (i = 0; i < p->core_count; i++) {
@@ -295,6 +334,13 @@ void arm_proc_free(arm_proc *s) {
     }
 }
 
+const char *arm_proc_name(arm_proc *s) {
+    if (s)
+        return s->cpu_name;
+    else
+        return NULL;
+}
+
 const char *arm_proc_desc(arm_proc *s) {
     if (s)
         return s->cpu_desc;
@@ -339,6 +385,7 @@ int arm_proc_core_khz_cur(arm_proc *s, int core) {
 void dump(arm_proc *p) {
     int i;
     if (p) {
+        printf(".proc.cpu_name = %s\n", p->cpu_name);
         printf(".proc.cpu_desc = %s\n", p->cpu_desc);
         printf(".proc.max_khz = %d\n", p->max_khz);
         printf(".proc.core_count = %d\n", p->core_count);
