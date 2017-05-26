@@ -91,12 +91,13 @@ const char *arm_flag_meaning(const char *flag) {
     return NULL;
 }
 
+#define APPEND_FLAG(f) strcat(all_flags, f); strcat(all_flags, " ");
+
 const char *arm_flag_list() {
     int i = 0;
     if (!all_flags_built) {
         while(flag_meaning[i].name != NULL) {
-            strcat(all_flags, flag_meaning[i].name);
-            strcat(all_flags, " ");
+            APPEND_FLAG(flag_meaning[i].name);
             i++;
         }
         all_flags_built = 1;
@@ -104,6 +105,51 @@ const char *arm_flag_list() {
     return all_flags;
 }
 
+static int search_for_flag(char *flags, const char *flag) {
+    char *p = strstr(flags, flag);
+    int l = strlen(flag);
+    int front = 0, back = 0;
+    //DEBUG printf("search_for_flag( %x, \"%s\")\n", flags, flag);
+    if (strlen(flag) == 0 || strchr(flag, ' ') )
+        return 0;
+    while (p) {
+        if (p == flags) front = 1;
+        else if (*(p - 1) == ' ') front = 1;
+        if (*(p + l) == ' ' || *(p + l) == '\0')
+            back = 1;
+        if (front && back)
+            return 1;
+        p = strstr(p + l, flag);
+    }
+    return 0;
+}
+
+static void add_unknown_flags(char *flags_str) {
+    char flag[16] = "";
+    char *cur, *next;
+    int added_count = 0;
+    if (flags_str) {
+        arm_flag_list(); /* force build */
+        cur = flags_str;
+        next = strchr(cur, ' '); if (!next) next = strchr(cur, '\0');
+        while(next) {
+            if (next-cur <= 15) {
+                memset(flag, 0, 16);
+                strncpy(flag, cur, next-cur);
+                if (strlen(flag) > 0) {
+                    if (!search_for_flag(all_flags, flag)) {
+                        APPEND_FLAG(flag);
+                        added_count++;
+                    }
+                }
+            }
+            if (*next == '\0') break;
+            cur = next + 1;
+            next = strchr(cur, ' '); if (!next) next = strchr(cur, '\0');
+        }
+    }
+    // DEBUG printf("add_unknown_flags(): added %d previously unknown flags\n", added_count);
+}
 
 typedef struct {
     int ref_count;
@@ -316,6 +362,14 @@ static char *gen_cpu_desc(arm_proc *p) {
     return ret;
 }
 
+static void scan_for_unknown_flags(arm_proc *s) {
+    int i;
+    if (s) {
+        for(i = 0; i < s->flags->count; i++)
+            add_unknown_flags(s->flags->strs[i].str);
+    }
+}
+
 arm_proc *arm_proc_new(void) {
     arm_proc *s = malloc( sizeof(arm_proc) );
     if (s) {
@@ -333,6 +387,7 @@ arm_proc *arm_proc_new(void) {
             return NULL;
         }
         s->cpu_desc = gen_cpu_desc(s);
+        scan_for_unknown_flags(s);
     }
     return s;
 }
@@ -364,22 +419,6 @@ const char *arm_proc_desc(arm_proc *s) {
         return s->cpu_desc;
     else
         return NULL;
-}
-
-static int search_for_flag(char *flags, const char *flag) {
-    char *p = strstr(flags, flag);
-    int l = strlen(flag);
-    int front = 0, back = 0;
-    while (p) {
-        if (p == flags) front = 1;
-        else if (*(p - 1) == ' ') front = 1;
-        if (*(p + l) == ' ' || *(p + l) == '\0')
-            back = 1;
-        if (front && back)
-            return 1;
-        p = strstr(p + l, flag);
-    }
-    return 0;
 }
 
 int arm_proc_has_flag(arm_proc *s, const char *flag) {
@@ -464,7 +503,7 @@ static void dump(arm_proc *p) {
                 p->cores[i].cpukhz_min, p->cores[i].cpukhz_max, p->cores[i].cpukhz_cur );
         }
     }
-    printf(".all_flags = %s\n", arm_flag_list() );
+    printf(".all_flags = %s (len: %d)\n", arm_flag_list(), strlen( arm_flag_list() ) );
 }
 
 int main(void) {
