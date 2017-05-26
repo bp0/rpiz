@@ -26,6 +26,7 @@ char *get_file_contents(const char *file);
 typedef struct kv_scan kv_scan;
 
 kv_scan *kv_new(char *buffer);
+kv_scan *kv_new_file(const char *file);
 int kv_next(kv_scan *, char **key, char **value);
 void kv_free(kv_scan *);
 

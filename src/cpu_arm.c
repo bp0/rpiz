@@ -190,7 +190,6 @@ static char *strlist_add(cpu_string_list *list, const char* str) {
 #define REDUP(f) if(p->cores[di].f) { p->cores[i].f = strlist_add(p->f, p->cores[di].f); }
 
 static int scan_cpu(arm_proc* p) {
-    char *cpuinfo;
     kv_scan *kv; char *key, *value;
     int core = -1;
     int i, di;
@@ -199,10 +198,7 @@ static int scan_cpu(arm_proc* p) {
 
     if (!p) return 0;
 
-    cpuinfo = get_file_contents("/proc/cpuinfo");
-    if (!cpuinfo) return 0;
-
-    kv = kv_new(cpuinfo);
+    kv = kv_new_file("/proc/cpuinfo");
     if (kv) {
         while( kv_next(kv, &key, &value) ) {
             CHECK_FOR("processor") {
@@ -238,10 +234,10 @@ static int scan_cpu(arm_proc* p) {
                 CHECK_FOR_STR("CPU revision", cpu_revision);
             }
         }
-    }
-    FIN_PROC();
-    kv_free(kv);
-    free(cpuinfo);
+        FIN_PROC();
+        kv_free(kv);
+    } else
+        return 0;
 
     p->core_count = core + 1;
 
@@ -387,7 +383,7 @@ int arm_proc_core_khz_cur(arm_proc *s, int core) {
 
 #ifdef DEBUG_ARMCPU
 
-void dump(arm_proc *p) {
+static void dump(arm_proc *p) {
     int i;
     if (p) {
         printf(".proc.cpu_name = %s\n", p->cpu_name);
@@ -409,16 +405,17 @@ void dump(arm_proc *p) {
     }
 }
 
-void main() {
+int main(void) {
     arm_proc *p;
     
     p = arm_proc_new();
     if (p == NULL) {
         printf("Scan CPU failed.\n");
-        exit(1);
+        return 1;
     }
     dump(p);
     arm_proc_free(p);
+    return 0;
 }
 
 #endif

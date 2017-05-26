@@ -63,10 +63,14 @@ char *get_file_contents(const char *file) {
     return buff;
 }
 
+#define MAXLEN_KEY 128
+#define MAXLEN_VALUE 512
+
 struct kv_scan {
     char *buffer;
+    int own_buffer;
     char *curline, *nextline;
-    char key[128], value[256];
+    char key[MAXLEN_KEY], value[MAXLEN_VALUE];
 };
 
 kv_scan *kv_new(char *buffer) {
@@ -76,8 +80,27 @@ kv_scan *kv_new(char *buffer) {
         if (s) {
             memset(s, 0, sizeof(*s));
             s->buffer = buffer;
+            s->own_buffer = 0;
             s->curline = s->buffer;
             s->nextline = strchr(s->curline, '\n');
+        }
+    }
+    return s;
+}
+
+kv_scan *kv_new_file(const char *file) {
+    kv_scan *s = NULL;
+    s = malloc( sizeof(kv_scan) );
+    if (s) {
+        memset(s, 0, sizeof(*s));
+        s->buffer = get_file_contents(file);
+        if (s->buffer) {
+            s->own_buffer = 1;
+            s->curline = s->buffer;
+            s->nextline = strchr(s->curline, '\n');
+        } else {
+            free(s);
+            return NULL;
         }
     }
     return s;
@@ -94,10 +117,10 @@ int kv_next(kv_scan *s, char **k, char **v) {
                 klen = nextcol - s->curline;
                 nextcol++; while (*nextcol == ' ') nextcol++; /* skip : and any leading spaces */
                 vlen = s->nextline - nextcol;
-                if (klen > 127) klen = 127;
-                if (vlen > 255) vlen = 255;
-                memset(s->key, 0, 128); 
-                memset(s->value, 0, 256);
+                if (klen > MAXLEN_KEY-1) klen = MAXLEN_KEY-1;
+                if (vlen > MAXLEN_VALUE-1) vlen = MAXLEN_VALUE-1;
+                memset(s->key, 0, MAXLEN_KEY);
+                memset(s->value, 0, MAXLEN_VALUE);
                 strncpy(s->key, s->curline, klen);
                 strncpy(s->value, nextcol, vlen);
                 *k = s->key; *v = s->value; found = 1;
@@ -113,5 +136,9 @@ int kv_next(kv_scan *s, char **k, char **v) {
 }
 
 void kv_free(kv_scan *s) {
-    free(s);
+    if (s) {
+        if (s->own_buffer)
+            free(s->buffer);
+        free(s);
+    }
 }
