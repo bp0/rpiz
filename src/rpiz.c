@@ -172,6 +172,28 @@ static void fill_board_list(void) {
     BOARD_ADD("SOC Temp", soc_temp );
 }
 
+static void update_board_list(void) {
+    GtkTreeIter  iter;
+    gboolean     valid;
+    gchar *key;
+    char soc_temp[64];
+
+    /* Get first row in list store */
+    valid = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(board_store), &iter);
+
+    while (valid)
+    {
+        gtk_tree_model_get(GTK_TREE_MODEL(board_store), &iter, BOARD_COL_KEY, &key, -1);
+        if (g_strcmp0(key, "SOC Temp") == 0) {
+            sprintf(soc_temp, "%0.2f' C", rpi_soc_temp() );
+            gtk_list_store_set(board_store, &iter, BOARD_COL_VALUE, soc_temp, -1);
+        }
+
+        /* Get next row */
+        valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(board_store), &iter);
+    }
+}
+
 #define CPU_ADD(k, v, mi, ma) \
     gtk_list_store_append (cpu_store, &iter); \
     gtk_list_store_set (cpu_store, &iter,     \
@@ -193,6 +215,30 @@ static void fill_cpu_list(void) {
         sprintf(min, "%0.2f MHz", (double)arm_proc_core_khz_min(proc, c) / 1000);
         sprintf(max, "%0.2f MHz", (double)arm_proc_core_khz_max(proc, c) / 1000);
         CPU_ADD(id, cur, min, max);
+    }
+}
+
+static void update_cpu_list(void) {
+    GtkTreeIter  iter;
+    gboolean     valid;
+    gchar *core_id;
+    char cur[24] = "";
+    int c;
+
+    /* Get first row in list store */
+    valid = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(cpu_store), &iter);
+
+    while (valid)
+    {
+        gtk_tree_model_get(GTK_TREE_MODEL(cpu_store), &iter, CPU_COL_KEY, &core_id, -1);
+        c = g_ascii_strtoll(core_id, NULL, 10);
+        c = arm_proc_core_from_id(proc, c);
+
+        sprintf(cur, "%0.2f MHz", (double)arm_proc_core_khz_cur(proc, c) / 1000);
+        gtk_list_store_set(cpu_store, &iter, CPU_COL_VALUE, cur, -1);
+
+        /* Get next row */
+        valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(cpu_store), &iter);
     }
 }
 
@@ -288,9 +334,8 @@ static void flags_view_init(void) {
 
 static gboolean refresh_data(gpointer data) {
     data = data; /* to avoid a warning */
-    //printf("%0.2f' C\n", rpi_soc_temp() );
-    fill_board_list();
-    fill_cpu_list();
+    update_board_list();
+    update_cpu_list();
     return G_SOURCE_CONTINUE;
 }
 
@@ -312,7 +357,7 @@ int main( int   argc,
     GtkTextBuffer *about_text_buffer = gtk_text_buffer_new (NULL);
     gtk_text_buffer_set_text (about_text_buffer, about_text, -1);
 
-    refresh_timer.interval_ms = 200;
+    refresh_timer.interval_ms = 500;
     refresh_timer.timeout_id = g_timeout_add(refresh_timer.interval_ms, refresh_data, NULL);
 
     /* GUI */

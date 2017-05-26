@@ -399,6 +399,16 @@ int arm_proc_cores(arm_proc *s) {
         return 0;
 }
 
+int arm_proc_core_from_id(arm_proc *s, int id) {
+    int i = 0;
+    if (s)
+        for (i = 0; i < s->core_count; i++ )
+            if (s->cores[i].id == id)
+                return i;
+
+    return -1;
+}
+
 int arm_proc_core_id(arm_proc *s, int core) {
     if (s)
         if (core < s->core_count)
