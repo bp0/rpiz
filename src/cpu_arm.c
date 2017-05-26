@@ -78,6 +78,9 @@ static struct {
     { NULL, NULL},
 };
 
+static int all_flags_built = 0;
+static char all_flags[1024] = "";
+
 const char *arm_flag_meaning(const char *flag) {
     int i = 0;
     while(flag_meaning[i].name != NULL) {
@@ -87,6 +90,20 @@ const char *arm_flag_meaning(const char *flag) {
     }
     return NULL;
 }
+
+const char *arm_flag_list() {
+    int i = 0;
+    if (!all_flags_built) {
+        while(flag_meaning[i].name != NULL) {
+            strcat(all_flags, flag_meaning[i].name);
+            strcat(all_flags, " ");
+            i++;
+        }
+        all_flags_built = 1;
+    }
+    return all_flags;
+}
+
 
 typedef struct {
     int ref_count;
@@ -349,11 +366,45 @@ const char *arm_proc_desc(arm_proc *s) {
         return NULL;
 }
 
+static int search_for_flag(char *flags, const char *flag) {
+    char *p = strstr(flags, flag);
+    int l = strlen(flag);
+    int front = 0, back = 0;
+    while (p) {
+        if (p == flags) front = 1;
+        else if (*(p - 1) == ' ') front = 1;
+        if (*(p + l) == ' ' || *(p + l) == '\0')
+            back = 1;
+        if (front && back)
+            return 1;
+        p = strstr(p + l, flag);
+    }
+    return 0;
+}
+
+int arm_proc_has_flag(arm_proc *s, const char *flag) {
+    int i;
+    if (s) {
+        for (i = 0; i < s->flags->count; i++)
+            if (search_for_flag(s->flags->strs[i].str, flag))
+                return 1;
+    }
+    return 0;
+}
+
 int arm_proc_cores(arm_proc *s) {
     if (s)
         return s->core_count;
     else
         return 0;
+}
+
+int arm_proc_core_id(arm_proc *s, int core) {
+    if (s)
+        if (core < s->core_count)
+            return s->cores[core].id;
+
+    return 0;
 }
 
 int arm_proc_core_khz_min(arm_proc *s, int core) {
@@ -403,6 +454,7 @@ static void dump(arm_proc *p) {
                 p->cores[i].cpukhz_min, p->cores[i].cpukhz_max, p->cores[i].cpukhz_cur );
         }
     }
+    printf(".all_flags = %s\n", arm_flag_list() );
 }
 
 int main(void) {
