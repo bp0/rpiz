@@ -241,7 +241,8 @@ float rpi_soc_temp() {
     char *tmp = NULL;
     float temp = 0.0f;
     tmp = get_file_contents("/sys/class/thermal/thermal_zone0/temp");
-    temp = (float)atoi(tmp);
+    if (tmp != NULL)
+        temp = (float)atoi(tmp);
     if (temp) 
         temp /= 1000.0f;
     free(tmp);
