@@ -258,9 +258,8 @@ static void fill_flags_list(void) {
     while(all_flags[i] != NULL) {
         if (g_strcmp0(all_flags[i], "") != 0) {
             present = arm_proc_has_flag(proc, all_flags[i]);
-            if (present) {
+            // if (present)
                 FLAGS_ADD(all_flags[i], present, arm_flag_meaning(all_flags[i]) );
-            }
         }
         i++;
     }
@@ -328,11 +327,19 @@ static void flags_view_init(void) {
     for(i = 0; i < FLAGS_N_COLUMNS; i++) {
         GtkCellRenderer *renderer;
         GtkTreeViewColumn *column;
-        renderer = gtk_cell_renderer_text_new ();
-        column = gtk_tree_view_column_new_with_attributes (flags_col_names[i],
+        if (i == FLAGS_COL_EXISTS) {
+            renderer = gtk_cell_renderer_toggle_new ();
+            column = gtk_tree_view_column_new_with_attributes (flags_col_names[i],
+                                                       renderer,
+                                                       "active", i,
+                                                       NULL);
+        } else {
+            renderer = gtk_cell_renderer_text_new ();
+            column = gtk_tree_view_column_new_with_attributes (flags_col_names[i],
                                                        renderer,
                                                        "text", i,
                                                        NULL);
+        }
         gtk_tree_view_append_column (GTK_TREE_VIEW (flags_view), column);
     }
 }
