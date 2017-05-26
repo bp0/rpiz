@@ -51,9 +51,9 @@ static struct {
   { "0013",      "Q1 2015",    "B+",                  "1.2",    "512MB",    unk,             NULL },
   { "0014",      "Q2 2014",    "Compute Module 1",    "1.0",    "512MB",    "Embest",        NULL },
   { "0015",      unk,          "A+",                  "1.1",    "256MB/512MB",    "Embest",      NULL  },
-  { "a01040",    unk,          "2 Model B",           "1.0",    "1GB",      "Sony",          "BCM2836" },
-  { "a01041",    "Q1 2015",    "2 Model B",           "1.1",    "1GB",      "Sony",          "BCM2836" },
-  { "a21041",    "Q1 2015",    "2 Model B",           "1.1",    "1GB",      "Embest",        "BCM2836" },
+  { "a01040",    unk,          "2 Model B",           "1.0",    "1GB",      "Sony",          "BCM2836?" },
+  { "a01041",    "Q1 2015",    "2 Model B",           "1.1",    "1GB",      "Sony",          "BCM2836?" },
+  { "a21041",    "Q1 2015",    "2 Model B",           "1.1",    "1GB",      "Embest",        "BCM2836?" },
   { "a22042",    "Q3 2016",    "2 Model B",           "1.2",    "1GB",      "Embest",        "BCM2837" },  /* (with BCM2837) */
   { "900021",    "Q3 2016",    "A+",                  "1.1",    "512MB",    "Sony",          NULL },
   { "900032",    "Q2 2016?",    "B+",                 "1.2",    "512MB",    "Sony",          NULL },
@@ -63,8 +63,8 @@ static struct {
   { "9000c1",    "Q1 2017",    "Zero W",              "1.1",    "512MB",    "Sony",          NULL },
   { "a02082",    "Q1 2016",    "3 Model B",           "1.2",    "1GB",      "Sony",          "BCM2837" },
   { "a020a0",    "Q1 2017",    "Compute Module 3 or CM3 Lite",  "1.0",    "1GB",    "Sony",          NULL },
-  { "a22082",    "Q1 2016",    "3 Model B",           "1.2",    "1GB",      "Embest",        "BCM2837"  },
-  { "a32082",    "Q4 2016",    "3 Model B",           "1.2",    "1GB",      "Sony Japan",    "BCM2837"  },
+  { "a22082",    "Q1 2016",    "3 Model B",           "1.2",    "1GB",      "Embest",        "BCM2709" },
+  { "a32082",    "Q4 2016",    "3 Model B",           "1.2",    "1GB",      "Sony Japan",    NULL  },
   { NULL, NULL, NULL, NULL, NULL, NULL, NULL }
 };
 

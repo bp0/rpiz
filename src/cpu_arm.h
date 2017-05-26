@@ -26,8 +26,10 @@ typedef struct arm_proc arm_proc;
 arm_proc *arm_proc_new(void);
 void arm_proc_free(arm_proc *);
 
-const char *arm_flag_meaning(const char *flag);
+const char *arm_implementer(const char *code);
+const char *arm_arm_part(const char *code); /* when implementer = 0x41 ARM */
 const char *arm_flag_list(void);
+const char *arm_flag_meaning(const char *flag);
 
 const char *arm_proc_name(arm_proc *);
 const char *arm_proc_desc(arm_proc *);

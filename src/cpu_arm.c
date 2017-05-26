@@ -78,6 +78,80 @@ static struct {
     { NULL, NULL},
 };
 
+static struct {
+    char *code, *name;
+} tab_arm_implementer[] = {
+    { "0x41",	"ARM" },
+    { NULL, NULL},
+};
+
+static struct {
+    char *code, *part_desc;
+} tab_arm_arm_part[] = { /* only valid for implementer 0x41 ARM */
+    { "0xd03",	"Cortex-A53" },
+    { "0xb76",	"ARM1176" },
+    { NULL, NULL},
+};
+
+const char *arm_implementer(const char *code) {
+    int i = 0;
+    while(tab_arm_implementer[i].code != NULL) {
+        if (strcmp(tab_arm_implementer[i].code, code) == 0)
+            return tab_arm_implementer[i].name;
+        i++;
+    }
+    return NULL;
+}
+
+const char *arm_arm_part(const char *code) {
+    int i = 0;
+    while(tab_arm_arm_part[i].code != NULL) {
+        if (strcmp(tab_arm_arm_part[i].code, code) == 0)
+            return tab_arm_arm_part[i].part_desc;
+        i++;
+    }
+    return NULL;
+}
+
+#define CHECK_IMP(i) if (strcmp(imp, i) == 0)
+static char *gen_decoded_name(const char *imp, const char *arch, const char *part, const char *rev, const char *model_name) {
+    char *dnbuff;
+    char *imp_name = NULL, *part_desc = NULL;
+    dnbuff = malloc(256);
+    if (dnbuff) {
+        memset(dnbuff, 0, 256);
+
+        if (imp && arch && part && rev) {
+            imp_name = (char*) arm_implementer(imp);
+            CHECK_IMP("0x41") {
+                part_desc = (char*) arm_arm_part(part);
+            }
+            if (imp_name || part_desc) {
+                sprintf(dnbuff, "%s %s rev %s (arch:%s)",
+                        (imp_name) ? imp_name : imp,
+                        (part_desc) ? part_desc : part,
+                        rev, arch);
+            } else {
+                /* fallback for now */
+                sprintf(dnbuff, "%s [imp:%s part:%s rev:%s arch:%s]",
+                        model_name,
+                        (imp_name) ? imp_name : imp,
+                        (part_desc) ? part_desc : part,
+                        rev, arch);
+            }
+        } else {
+            /* prolly not ARM at all */
+            if (model_name)
+                sprintf(dnbuff, "%s", model_name);
+            else {
+                free(dnbuff);
+                return NULL;
+            }
+        }
+    }
+    return dnbuff;
+}
+
 static int all_flags_built = 0;
 static char all_flags[1024] = "";
 
@@ -173,11 +247,13 @@ typedef struct {
     char *cpu_variant;
     char *cpu_part;
     char *cpu_revision;
+    char *decoded_name;
     char *cpukhz_max_str;
 } arm_core;
 
 struct arm_proc {
     cpu_string_list *model_name;
+    cpu_string_list *decoded_name;
     cpu_string_list *flags;
     cpu_string_list *cpu_implementer;
     cpu_string_list *cpu_architecture;
@@ -258,6 +334,7 @@ static int scan_cpu(arm_proc* p) {
     int i, di;
     char rep_pname[256] = "";
     char tmp_maxfreq[128];
+    char *tmp_dn = NULL;
 
     if (!p) return 0;
 
@@ -321,6 +398,14 @@ static int scan_cpu(arm_proc* p) {
 
     /* data not from /proc/cpuinfo */
     for (i = 0; i < p->core_count; i++) {
+        /* decoded names */
+        tmp_dn = gen_decoded_name(
+                p->cores[i].cpu_implementer, p->cores[i].cpu_architecture,
+                p->cores[i].cpu_part, p->cores[i].cpu_revision,
+                p->cores[i].model_name);
+        p->cores[i].decoded_name = strlist_add(p->decoded_name, tmp_dn);
+        free(tmp_dn); tmp_dn = NULL;
+
         /* freq */
         p->cores[i].cpukhz_cur = get_cpu_int("cpufreq/scaling_cur_freq", p->cores[i].id);
         p->cores[i].cpukhz_min = get_cpu_int("cpufreq/scaling_min_freq", p->cores[i].id);
@@ -342,8 +427,8 @@ static char *gen_cpu_desc(arm_proc *p) {
     if (p) {
         ret = malloc(4096);
         memset(ret, 0, 4096);
-        for (i = 0; i < p->model_name->count; i++) {
-            sprintf(tmp, "%dx %s", p->model_name->strs[i].ref_count, p->model_name->strs[i].str);
+        for (i = 0; i < p->decoded_name->count; i++) {
+            sprintf(tmp, "%dx %s", p->decoded_name->strs[i].ref_count, p->decoded_name->strs[i].str);
             sprintf(ret + l, "%s%s", (i>0) ? " + " : "", tmp);
             l += (i>0) ? strlen(tmp) + 3 : strlen(tmp);
         }
@@ -381,6 +466,7 @@ arm_proc *arm_proc_new(void) {
         s->cpu_variant = strlist_new();
         s->cpu_part = strlist_new();
         s->cpu_revision = strlist_new();
+        s->decoded_name = strlist_new();
         s->cpukhz_max_str = strlist_new();
         if (!scan_cpu(s)) {
             arm_proc_free(s);
@@ -401,6 +487,7 @@ void arm_proc_free(arm_proc *s) {
         strlist_free(s->cpu_variant);
         strlist_free(s->cpu_part);
         strlist_free(s->cpu_revision);
+        strlist_free(s->decoded_name);
         strlist_free(s->cpukhz_max_str);
         free(s->cpu_desc);
         free(s);
@@ -494,10 +581,10 @@ static void dump(arm_proc *p) {
             printf(".proc.core[%d].id = %d\n", i, p->cores[i].id);
             printf(".proc.core[%d].model_name = %s\n", i, p->cores[i].model_name);
             printf(".proc.core[%d].flags = %s\n", i, p->cores[i].flags);
-            printf(".proc.core[%d].cpu_implementer = %s\n", i, p->cores[i].cpu_implementer);
+            printf(".proc.core[%d].cpu_implementer = [%s] %s\n", i, p->cores[i].cpu_implementer, arm_implementer(p->cores[i].cpu_implementer) );
             printf(".proc.core[%d].cpu_architecture = %s\n", i, p->cores[i].cpu_architecture);
             printf(".proc.core[%d].cpu_variant = %s\n", i, p->cores[i].cpu_variant);
-            printf(".proc.core[%d].cpu_part = %s\n", i, p->cores[i].cpu_part);
+            printf(".proc.core[%d].cpu_part = [%s] %s\n", i, p->cores[i].cpu_part, arm_arm_part(p->cores[i].cpu_part) );
             printf(".proc.core[%d].cpu_revision = %s\n", i, p->cores[i].cpu_revision);
             printf(".proc.core[%d].freq_khz(min - max / cur) = %d - %d / %d\n", i, 
                 p->cores[i].cpukhz_min, p->cores[i].cpukhz_max, p->cores[i].cpukhz_cur );
