@@ -24,7 +24,7 @@
 #include "util.h"
 #include "board_rpi.h"
 
-static char unk[] = "(Unkown)";
+static char unk[] = "(Unknown)";
 
 /* information table from: http://elinux.org/RPi_HardwareHistory */
 static struct {
