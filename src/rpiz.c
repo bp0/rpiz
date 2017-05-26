@@ -22,6 +22,12 @@
 #include "cpu_arm.h"
 #include <gtk/gtk.h>
 
+const char about_text[] =
+    "rpiz\n"
+    "(c) 2017 Burt P. <pburt0@gmail.com>\n"
+    "https://github.com/bp0/rpiz\n"
+    "\n";
+
 rpi_board *board;
 arm_proc *proc;
 
@@ -112,7 +118,10 @@ int main( int   argc,
         g_free(core_text);
     }
     */
-        
+
+    GtkTextBuffer *about_text_buffer = gtk_text_buffer_new (NULL);
+    gtk_text_buffer_set_text (about_text_buffer, about_text, -1);
+
     /* GUI */
     GtkWidget *window;
     GtkWidget *notebook;
@@ -131,6 +140,7 @@ int main( int   argc,
     /* notebook pages */
     GtkWidget *summary_page = gtk_text_view_new_with_buffer(summary_text_buffer);
     /* GtkWidget *core_page[MAX_CORES]; */
+    GtkWidget *about_page = gtk_text_view_new_with_buffer(about_text_buffer);
         
     notebook = gtk_notebook_new();
     gtk_notebook_set_tab_pos(GTK_NOTEBOOK (notebook), GTK_POS_TOP);
@@ -143,6 +153,7 @@ int main( int   argc,
         g_free(corelabel);
     }
     */
+    add_notebook_page("About", notebook, about_page);
 
     /* This packs the notebook into the window (a gtk container). */
     gtk_container_add (GTK_CONTAINER (window), notebook);
