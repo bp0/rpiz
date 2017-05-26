@@ -289,8 +289,6 @@ int main( int   argc,
     gchar *summary_text;
     summary_text = rpiz_text_summary();
     printf("%s", summary_text);
-    GtkTextBuffer *summary_text_buffer = gtk_text_buffer_new (NULL);
-    gtk_text_buffer_set_text (summary_text_buffer, summary_text, -1);
     g_free(summary_text);
 
     GtkTextBuffer *about_text_buffer = gtk_text_buffer_new (NULL);
@@ -312,7 +310,6 @@ int main( int   argc,
     gtk_container_set_border_width (GTK_CONTAINER (window), 10);
 
     /* notebook pages */
-    GtkWidget *summary_page = gtk_text_view_new_with_buffer(summary_text_buffer);
     GtkWidget *about_page = gtk_text_view_new_with_buffer(about_text_buffer);
     board_view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (board_store));
     cpu_view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (cpu_store));
@@ -326,7 +323,6 @@ int main( int   argc,
     add_notebook_page("Board", notebook, board_view);
     add_notebook_page("CPU", notebook, cpu_view);
     add_notebook_page("Feature Flags", notebook, flags_view);
-    add_notebook_page("Summary", notebook, summary_page);
     add_notebook_page("About", notebook, about_page);
 
     /* This packs the notebook into the window (a gtk container). */
