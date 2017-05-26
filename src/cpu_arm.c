@@ -328,11 +328,15 @@ static char *strlist_add(cpu_string_list *list, const char* str) {
     return list->strs[i].str;
 }
 
-#define CHECK_FOR(k) if (strncmp(k, key, (strlen(k) < strlen(key)) ? strlen(k) : strlen(key)) == 0)
-#define CHECK_FOR_STR(k, s) CHECK_FOR(k) { p->cores[core].s = strlist_add(p->s, value); continue; }
+#define CHECK_FOR(k) (strncmp(k, key, (strlen(k) < strlen(key)) ? strlen(k) : strlen(key)) == 0)
+#define GET_STR(k, s) if (CHECK_FOR(k)) { p->cores[core].s = strlist_add(p->s, value); continue; }
 #define FIN_PROC() if (core >= 0) if (!p->cores[core].model_name) { p->cores[core].model_name = strlist_add(p->model_name, rep_pname); }
 
 #define REDUP(f) if(p->cores[di].f) { p->cores[i].f = strlist_add(p->f, p->cores[di].f); }
+
+#ifndef PROC_CPUINFO
+#define PROC_CPUINFO "/proc/cpuinfo"
+#endif
 
 static int scan_cpu(arm_proc* p) {
     kv_scan *kv; char *key, *value;
@@ -344,10 +348,20 @@ static int scan_cpu(arm_proc* p) {
 
     if (!p) return 0;
 
-    kv = kv_new_file("/proc/cpuinfo");
+    kv = kv_new_file(PROC_CPUINFO);
     if (kv) {
         while( kv_next(kv, &key, &value) ) {
-            CHECK_FOR("processor") {
+            if (CHECK_FOR("Processor")) {
+                strcpy(rep_pname, value);
+                continue;
+            }
+
+            if (CHECK_FOR("Hardware")) {
+                strcpy(p->cpu_name, value);
+                continue;
+            }
+
+            if (CHECK_FOR("processor")) {
                 FIN_PROC();
                 core++;
                 memset(&p->cores[core], 0, sizeof(arm_core));
@@ -355,29 +369,30 @@ static int scan_cpu(arm_proc* p) {
                 continue;
             }
 
-            CHECK_FOR("Processor") {
-                strcpy(rep_pname, value);
-                continue;
+            if (core < 0) {
+                if ( CHECK_FOR("model name")
+                     || CHECK_FOR("Features")
+                     || CHECK_FOR("flags") ) {
+                    /* this cpuinfo doesn't provide processor : n
+                     * there is prolly only one core */
+                    core++;
+                    memset(&p->cores[core], 0, sizeof(arm_core));
+                    p->cores[core].id = 0;
+                }
             }
-
-            CHECK_FOR("Hardware") {
-                strcpy(p->cpu_name, value);
-                continue;
-            }
-
             if (core >= 0) {
-                CHECK_FOR_STR("model name", model_name);
+                GET_STR("model name", model_name);
 
                 /* likely one or the other */
-                CHECK_FOR_STR("Features", flags);
-                CHECK_FOR_STR("flags", flags);
+                GET_STR("Features", flags);
+                GET_STR("flags", flags);
 
                 /* ARM */
-                CHECK_FOR_STR("CPU implementer", cpu_implementer);
-                CHECK_FOR_STR("CPU architecture", cpu_architecture);
-                CHECK_FOR_STR("CPU variant", cpu_variant);
-                CHECK_FOR_STR("CPU part", cpu_part);
-                CHECK_FOR_STR("CPU revision", cpu_revision);
+                GET_STR("CPU implementer", cpu_implementer);
+                GET_STR("CPU architecture", cpu_architecture);
+                GET_STR("CPU variant", cpu_variant);
+                GET_STR("CPU part", cpu_part);
+                GET_STR("CPU revision", cpu_revision);
             }
         }
         FIN_PROC();
