@@ -22,7 +22,7 @@
 #define _ARMDATA_H_
 
 const char *arm_implementer(const char *code);
-const char *arm_arm_part(const char *code); /* when implementer = 0x41 ARM */
+const char *arm_part(const char *imp_code, const char *part_code);
 
 /* cpu_implementer, cpu_architecture, cpu_part, cpu_variant, cpu_revision from /proc/cpuinfo 
  * model_name is returned as a fallback if not enough data is known */

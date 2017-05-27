@@ -449,7 +449,7 @@ static void dump(arm_proc *p) {
             printf(".proc.core[%d].cpu_implementer = [%s] %s\n", i, p->cores[i].cpu_implementer, arm_implementer(p->cores[i].cpu_implementer) );
             printf(".proc.core[%d].cpu_architecture = %s\n", i, p->cores[i].cpu_architecture);
             printf(".proc.core[%d].cpu_variant = %s\n", i, p->cores[i].cpu_variant);
-            printf(".proc.core[%d].cpu_part = [%s] %s\n", i, p->cores[i].cpu_part, arm_arm_part(p->cores[i].cpu_part) );
+            printf(".proc.core[%d].cpu_part = [%s] %s\n", i, p->cores[i].cpu_part, arm_part(p->cores[i].cpu_implementer, p->cores[i].cpu_part) );
             printf(".proc.core[%d].cpu_revision = %s\n", i, p->cores[i].cpu_revision);
             printf(".proc.core[%d].freq_khz(min - max / cur) = %d - %d / %d\n", i, 
                 p->cores[i].cpukhz_min, p->cores[i].cpukhz_max, p->cores[i].cpukhz_cur );
