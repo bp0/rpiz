@@ -18,25 +18,17 @@
  * 
  */
 
-#ifndef _ARMCPU_H_
-#define _ARMCPU_H_
+#ifndef _ARMDATA_H_
+#define _ARMDATA_H_
 
-#include "arm_data.h"
+const char *arm_implementer(const char *code);
+const char *arm_arm_part(const char *code); /* when implementer = 0x41 ARM */
+
+/* cpu_implementer, cpu_architecture, cpu_part, cpu_variant, cpu_revision from /proc/cpuinfo 
+ * model_name is returned as a fallback if not enough data is known */
+char *arm_decoded_name(const char *imp, const char *arch, const char *part, const char *var, const char *rev, const char *model_name);
+
 const char *arm_flag_list(void);
-
-typedef struct arm_proc arm_proc;
-
-arm_proc *arm_proc_new(void);
-void arm_proc_free(arm_proc *);
-
-const char *arm_proc_name(arm_proc *);
-const char *arm_proc_desc(arm_proc *);
-int arm_proc_has_flag(arm_proc *, const char *flag);
-int arm_proc_cores(arm_proc *);
-int arm_proc_core_from_id(arm_proc *, int id); /* -1 if not found */
-int arm_proc_core_id(arm_proc *, int core);
-int arm_proc_core_khz_min(arm_proc *, int core);
-int arm_proc_core_khz_max(arm_proc *, int core);
-int arm_proc_core_khz_cur(arm_proc *, int core);
+const char *arm_flag_meaning(const char *flag);
 
 #endif
