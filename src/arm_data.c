@@ -172,7 +172,7 @@ const char *arm_part(const char *imp_code, const char *part_code) {
     return NULL;
 }
 
-char *arm_decoded_name(const char *imp, const char *arch, const char *part, const char *var, const char *rev, const char *model_name) {
+char *arm_decoded_name(const char *imp, const char *part, const char *var, const char *rev, const char *arch, const char *model_name) {
     char *dnbuff;
     char *imp_name = NULL, *part_desc = NULL;
     int r = 0, p = 0;

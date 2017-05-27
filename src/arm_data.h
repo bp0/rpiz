@@ -21,14 +21,18 @@
 #ifndef _ARMDATA_H_
 #define _ARMDATA_H_
 
+/* table lookups */
 const char *arm_implementer(const char *code);
 const char *arm_part(const char *imp_code, const char *part_code);
 
-/* cpu_implementer, cpu_architecture, cpu_part, cpu_variant, cpu_revision from /proc/cpuinfo 
+/* cpu_implementer, cpu_part, cpu_variant, cpu_revision, cpu_architecture from /proc/cpuinfo
  * model_name is returned as a fallback if not enough data is known */
-char *arm_decoded_name(const char *imp, const char *arch, const char *part, const char *var, const char *rev, const char *model_name);
+char *arm_decoded_name(
+    const char *imp, const char *part, const char *var, const char *rev,
+    const char *arch, const char *model_name);
 
-const char *arm_flag_list(void);
-const char *arm_flag_meaning(const char *flag);
+/* cpu flags from /proc/cpuinfo */
+const char *arm_flag_list(void);                  /* list of all known flags */
+const char *arm_flag_meaning(const char *flag);  /* lookup flag meaning */
 
 #endif

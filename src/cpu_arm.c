@@ -264,9 +264,9 @@ static int scan_cpu(arm_proc* p) {
     for (i = 0; i < p->core_count; i++) {
         /* decoded names */
         tmp_dn = arm_decoded_name(
-                p->cores[i].cpu_implementer, p->cores[i].cpu_architecture,
-                p->cores[i].cpu_part, p->cores[i].cpu_variant, p->cores[i].cpu_revision,
-                p->cores[i].model_name);
+                p->cores[i].cpu_implementer, p->cores[i].cpu_part,
+                p->cores[i].cpu_variant, p->cores[i].cpu_revision,
+                p->cores[i].cpu_architecture, p->cores[i].model_name);
         p->cores[i].decoded_name = strlist_add(p->decoded_name, tmp_dn);
         free(tmp_dn); tmp_dn = NULL;
 
