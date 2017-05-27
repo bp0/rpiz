@@ -30,7 +30,7 @@
  */
 static struct {
     char *name, *meaning;
-} flag_meaning[] = {
+} tab_flag_meaning[] = {
     /* arm/hw_cap */
     { "swp",	"SWP instruction (atomic read-modify-write)" },
     { "half",	"Half-word loads and stores" },
@@ -120,8 +120,8 @@ const char *arm_flag_list() {
     int i = 0, built = 0;
     built = strlen(all_flags);
     if (!built) {
-        while(flag_meaning[i].name != NULL) {
-            APPEND_FLAG(flag_meaning[i].name);
+        while(tab_flag_meaning[i].name != NULL) {
+            APPEND_FLAG(tab_flag_meaning[i].name);
             i++;
         }
     }
@@ -131,9 +131,9 @@ const char *arm_flag_list() {
 const char *arm_flag_meaning(const char *flag) {
     int i = 0;
     if (flag)
-    while(flag_meaning[i].name != NULL) {
-        if (strcmp(flag_meaning[i].name, flag) == 0)
-            return flag_meaning[i].meaning;
+    while(tab_flag_meaning[i].name != NULL) {
+        if (strcmp(tab_flag_meaning[i].name, flag) == 0)
+            return tab_flag_meaning[i].meaning;
         i++;
     }
     return NULL;

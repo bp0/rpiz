@@ -286,9 +286,9 @@ static void destroy( GtkWidget *widget,
     gtk_main_quit();
 }
 
-static void add_notebook_page(const gchar *label, GtkWidget *notebook, GtkWidget *page_widget) {
+static void add_notebook_page(const gchar *label, GtkWidget *notebook, GtkWidget *page_widget, gint border) {
     GtkWidget *lbl = gtk_label_new (label);
-    gtk_container_set_border_width (GTK_CONTAINER (page_widget), 10);
+    gtk_container_set_border_width (GTK_CONTAINER (page_widget), border);
     gtk_widget_set_size_request (page_widget, 100, 75);
     gtk_notebook_append_page(GTK_NOTEBOOK (notebook), page_widget, lbl);
     gtk_widget_show (page_widget);
@@ -375,6 +375,7 @@ int main( int   argc,
     /* GUI */
     GtkWidget *window;
     GtkWidget *notebook;
+    GtkWidget *mbox;
 
     gtk_init (&argc, &argv);
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -398,10 +399,14 @@ int main( int   argc,
 
     notebook = gtk_notebook_new();
     gtk_notebook_set_tab_pos(GTK_NOTEBOOK (notebook), GTK_POS_TOP);
-    add_notebook_page("Board", notebook, board_view);
-    add_notebook_page("CPU", notebook, cpu_view);
-    add_notebook_page("Feature Flags", notebook, flags_view);
-    add_notebook_page("About", notebook, about_page);
+
+    mbox = gtk_vbox_new (FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (mbox), board_view, TRUE, TRUE, 0); gtk_widget_show (board_view);
+    gtk_box_pack_start (GTK_BOX (mbox), cpu_view, FALSE, FALSE, 5); gtk_widget_show (cpu_view);
+
+    add_notebook_page("Board", notebook, mbox, 0);
+    add_notebook_page("CPU Flags", notebook, flags_view, 10);
+    add_notebook_page("About", notebook, about_page, 0);
 
     /* This packs the notebook into the window (a gtk container). */
     gtk_container_add (GTK_CONTAINER (window), notebook);
