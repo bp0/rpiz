@@ -89,6 +89,7 @@ static struct {
 static struct {
     char *code, *part_desc;
 } tab_arm_arm_part[] = { /* only valid for implementer 0x41 ARM */
+    { "0xc05",	"Cortex-A5" },
     { "0xd03",	"Cortex-A53" },
     { "0xb76",	"ARM1176" },
     { NULL, NULL},
@@ -601,6 +602,7 @@ static void dump(arm_proc *p) {
         for(i = 0; i < p->core_count; i++) {
             printf(".proc.core[%d].id = %d\n", i, p->cores[i].id);
             printf(".proc.core[%d].model_name = %s\n", i, p->cores[i].model_name);
+            printf(".proc.core[%d].decoded_name = %s\n", i, p->cores[i].decoded_name);
             printf(".proc.core[%d].flags = %s\n", i, p->cores[i].flags);
             printf(".proc.core[%d].cpu_implementer = [%s] %s\n", i, p->cores[i].cpu_implementer, arm_implementer(p->cores[i].cpu_implementer) );
             printf(".proc.core[%d].cpu_architecture = %s\n", i, p->cores[i].cpu_architecture);
