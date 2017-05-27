@@ -580,7 +580,7 @@ int arm_proc_core_from_id(arm_proc *s, int id) {
 
 int arm_proc_core_id(arm_proc *s, int core) {
     if (s)
-        if (core < s->core_count)
+        if (core >= 0 && core < s->core_count)
             return s->cores[core].id;
 
     return 0;
@@ -588,7 +588,7 @@ int arm_proc_core_id(arm_proc *s, int core) {
 
 int arm_proc_core_khz_min(arm_proc *s, int core) {
     if (s)
-        if (core < s->core_count)
+        if (core >= 0 && core < s->core_count)
             return s->cores[core].cpukhz_min;
 
     return 0;
@@ -596,7 +596,7 @@ int arm_proc_core_khz_min(arm_proc *s, int core) {
 
 int arm_proc_core_khz_max(arm_proc *s, int core) {
     if (s)
-        if (core < s->core_count)
+        if (core >= 0 && core < s->core_count)
             return s->cores[core].cpukhz_max;
 
     return 0;
@@ -604,7 +604,7 @@ int arm_proc_core_khz_max(arm_proc *s, int core) {
 
 int arm_proc_core_khz_cur(arm_proc *s, int core) {
     if (s)
-        if (core < s->core_count) {
+        if (core >= 0 && core < s->core_count) {
             s->cores[core].cpukhz_cur = get_cpu_int("cpufreq/scaling_cur_freq", s->cores[core].id);
             return s->cores[core].cpukhz_cur;
         }
