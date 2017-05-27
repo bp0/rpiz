@@ -98,6 +98,10 @@ static int rpi_find_board(const char *r_code) {
     return 0;
 }
 
+#ifndef PROC_CPUINFO
+#define PROC_CPUINFO "/proc/cpuinfo"
+#endif
+
 #define CHECK_KV(k, v)  \
     if (strncmp(k, key, (strlen(k) < strlen(key)) ? strlen(k) : strlen(key)) == 0) { \
         if (b->v != NULL) free(b->v);                                                \
@@ -108,7 +112,7 @@ static int rpi_get_cpuinfo_data(rpi_board *b) {
     char *cpuinfo;    
     kv_scan *kv; char *key, *value;
 
-    cpuinfo = get_file_contents("/proc/cpuinfo");
+    cpuinfo = get_file_contents(PROC_CPUINFO);
     if (!cpuinfo) return 0;
     
     kv = kv_new(cpuinfo);

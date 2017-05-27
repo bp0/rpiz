@@ -90,6 +90,7 @@ static struct {
     char *code, *part_desc;
 } tab_arm_arm_part[] = { /* only valid for implementer 0x41 ARM */
     { "0xc05",	"Cortex-A5" },
+    { "0xc09",	"Cortex-A9" },
     { "0xd03",	"Cortex-A53" },
     { "0xb76",	"ARM1176" },
     { NULL, NULL},
