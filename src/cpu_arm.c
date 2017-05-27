@@ -87,13 +87,29 @@ static struct {
 };
 
 static struct {
+    /* source: t = tested, d = official docs, f = web */
     char *code, *part_desc;
 } tab_arm_arm_part[] = { /* only valid for implementer 0x41 ARM */
-    { "0xc05",	"Cortex-A5" },
-    { "0xc09",	"Cortex-A9" },
-    { "0xd03",	"Cortex-A53" },
-    { "0xb76",	"ARM1176" },
-    { NULL, NULL},
+    /*f */ { "0x926",	"ARM926" },
+    /*f */ { "0x946",	"ARM946" },
+    /*f */ { "0x966",	"ARM966" },
+    /*f */ { "0xb02",	"ARM11 MPCore" },
+    /*f */ { "0xb36",	"ARM1136" },
+    /*f */ { "0xb56",	"ARM1156" },
+    /*t */ { "0xb76",	"ARM1176" },
+    /*t */ { "0xc05",	"Cortex-A5" },
+    /*d */ { "0xc07",	"Cortex-A7 MPCore" },
+    /*d */ { "0xc08",	"Cortex-A8" },
+    /*t */ { "0xc09",	"Cortex-A9" },
+    /*d */ { "0xc0e",	"Cortex-A17 MPCore" },
+    /*d */ { "0xc0f",	"Cortex-A15" },
+    /*d */ { "0xd01",	"Cortex-A32" },
+    /*t */ { "0xd03",	"Cortex-A53" },
+    /*d */ { "0xd04",	"Cortex-A35" },
+    /*d */ { "0xd07",	"Cortex-A57 MPCore" },
+    /*d */ { "0xd08",	"Cortex-A72" },
+    /*d */ { "0xd09",	"Cortex-A73" },
+    /*  */ { NULL, NULL},
 };
 
 const char *arm_implementer(const char *code) {
