@@ -82,7 +82,10 @@ static struct {
     char *code, *name;
 } tab_arm_implementer[] = {
     { "0x41",	"ARM" },
+    { "0x44",	"Intel (formerly DEC) StrongARM" },
+    { "0x56",	"Texas Instruments" },
     { "0x56",	"Marvell" },
+    { "0x69",	"Intel XScale" },
     { NULL, NULL},
 };
 
@@ -90,6 +93,7 @@ static struct {
     /* source: t = tested, d = official docs, f = web */
     char *code, *part_desc;
 } tab_arm_arm_part[] = { /* only valid for implementer 0x41 ARM */
+    /*f */ { "0x920",	"ARM920" },
     /*f */ { "0x926",	"ARM926" },
     /*f */ { "0x946",	"ARM946" },
     /*f */ { "0x966",	"ARM966" },
