@@ -35,7 +35,7 @@ static void dump_board(rpi_board *b) {
         "rpi_board_rcode(): %s\n"
         "rpi_board_serial(): %s\n"
         "rpi_board_mem_spec(): %s\n"
-        "rpi_board_soc: %s\n"
+        "rpi_board_soc(): %s\n"
         "rpi_soc_temp(): %0.2f' C\n"
         "%s",
         rpi_board_desc(b),
@@ -53,13 +53,12 @@ static void dump_board(rpi_board *b) {
 }
 
 static void dump_proc(arm_proc *p) {
-    int i;
+    /* int i; */
     if (p) {
+        printf("arm_proc_name(): %s\n", arm_proc_name(p) );
+        printf("arm_proc_desc(): %s\n", arm_proc_desc(p) );
+        printf("arm_proc_cores(): %d\n", arm_proc_cores(p) );
         /*
-        printf(".proc.cpu_name = %s\n", p->cpu_name);
-        printf(".proc.cpu_desc = %s\n", p->cpu_desc);
-        printf(".proc.max_khz = %d\n", p->max_khz);
-        printf(".proc.core_count = %d\n", p->core_count);
         for(i = 0; i < p->core_count; i++) {
             printf(".proc.core[%d].id = %d\n", i, p->cores[i].id);
             printf(".proc.core[%d].model_name = %s\n", i, p->cores[i].model_name);
@@ -74,7 +73,7 @@ static void dump_proc(arm_proc *p) {
         }
         */
     }
-    printf("arm_flag_list() = %s\n", arm_flag_list() );
+    printf("arm_flag_list() = %s (len:%d)\n", arm_flag_list(), strlen(arm_flag_list()) );
 }
 
 int main(void) {
@@ -88,7 +87,7 @@ int main(void) {
         return 1;
     }
     if (p == NULL) {
-        printf("Scan CPU failed.\n");
+        printf("Scan proc failed.\n");
         return 1;
     }
     dump_board(b);
