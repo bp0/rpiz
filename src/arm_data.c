@@ -130,6 +130,7 @@ const char *arm_flag_list() {
 
 const char *arm_flag_meaning(const char *flag) {
     int i = 0;
+    if (flag)
     while(flag_meaning[i].name != NULL) {
         if (strcmp(flag_meaning[i].name, flag) == 0)
             return flag_meaning[i].meaning;
@@ -138,10 +139,23 @@ const char *arm_flag_meaning(const char *flag) {
     return NULL;
 }
 
+/* match using strtol() for variations in base and letter case */
+static int code_match(const char* code0, const char* code1) {
+    int c0, c1;
+    if (code0 == code1) return 1;
+    if (code0 == NULL || code1 == NULL) return 0;
+    c0 = strtol(code0, NULL, 0);
+    c1 = strtol(code1, NULL, 0);
+    if (!c0 || !c1) return 0; /* codes should never be 0, so prolly strtol() fail */
+    if (c0 == c1) return 1;
+    return 0;
+}
+
 const char *arm_implementer(const char *code) {
     int i = 0;
+    if (code)
     while(tab_arm_implementer[i].code != NULL) {
-        if (strcmp(tab_arm_implementer[i].code, code) == 0)
+        if (code_match(tab_arm_implementer[i].code, code))
             return tab_arm_implementer[i].name;
         i++;
     }
@@ -150,8 +164,9 @@ const char *arm_implementer(const char *code) {
 
 const char *arm_arm_part(const char *code) {
     int i = 0;
+    if (code)
     while(tab_arm_arm_part[i].code != NULL) {
-        if (strcmp(tab_arm_arm_part[i].code, code) == 0)
+        if (code_match(tab_arm_arm_part[i].code, code))
             return tab_arm_arm_part[i].part_desc;
         i++;
     }
