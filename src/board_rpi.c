@@ -75,7 +75,9 @@ struct rpi_board {
     char *dt_model;     
     /* all from /proc/cpuinfo */
     char *soc, *revision, *serial;
-    
+
+    int overvolt; /* revision starts with 1000 */
+
     /* all point into the rpi_boardinfo table -
      * no need to free */
     char *intro, *model, *pcb, *mem_spec, *mfg, *soc_spec;
@@ -114,7 +116,7 @@ static int rpi_get_cpuinfo_data(rpi_board *b) {
 
     cpuinfo = get_file_contents(PROC_CPUINFO);
     if (!cpuinfo) return 0;
-    
+
     kv = kv_new(cpuinfo);
     if (kv) {
         while( kv_next(kv, &key, &value) ) {
@@ -131,11 +133,11 @@ static int rpi_get_cpuinfo_data(rpi_board *b) {
 static char* rpi_gen_board_name(int i) {
     char *ret = NULL;
     int l = 0;
-    
+
     /* bounds check i */
     while(rpi_boardinfo[l].value != NULL) l++;
     if (i >= l) return NULL;
-    
+
     ret = malloc(256);
     if (ret)
         snprintf(ret, 255, "Raspberry Pi %s Rev %s", rpi_boardinfo[i].model, rpi_boardinfo[i].pcb);
@@ -148,7 +150,7 @@ rpi_board *rpi_board_new() {
     if (s) {
         memset(s, 0, sizeof(*s));
         rpi_get_cpuinfo_data(s);
-        
+
         i = rpi_find_board(s->revision);
         s->model = rpi_boardinfo[i].model;
         s->pcb = rpi_boardinfo[i].pcb;
@@ -156,13 +158,17 @@ rpi_board *rpi_board_new() {
         s->intro = rpi_boardinfo[i].intro;
         s->mem_spec = rpi_boardinfo[i].mem;
         s->soc_spec = rpi_boardinfo[i].soc;
+        s->overvolt = 0;
+        if (s->revision)
+            if (strncmp(s->revision, "1000", 4) == 0)
+                s->overvolt = 1;
 
         s->dt_model = get_file_contents("/proc/device-tree/model");        
-        if (s->dt_model)
-            s->board_desc = s->dt_model;
+        if (i)
+            s->board_desc = rpi_gen_board_name(i);
         else {
-            if (i)
-                s->board_desc = rpi_gen_board_name(i);
+            if (s->dt_model)
+                s->board_desc = s->dt_model;
             else
                 s->board_desc = unk;
         }
@@ -239,6 +245,12 @@ const char *rpi_board_soc(rpi_board *s) {
             return s->soc;
     }
     return NULL;
+}
+
+int rpi_board_overvolt(rpi_board *s) {
+    if (s)
+        return s->overvolt;
+    return 0;
 }
 
 float rpi_soc_temp() {

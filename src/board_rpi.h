@@ -35,7 +35,7 @@ const char *rpi_board_intro(rpi_board *);
 const char *rpi_board_mfgby(rpi_board *);
 const char *rpi_board_mem_spec(rpi_board *);
 const char *rpi_board_soc(rpi_board *);
-
+int rpi_board_overvolt(rpi_board *);
 float rpi_soc_temp(void);
 
 #endif

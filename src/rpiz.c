@@ -149,8 +149,8 @@ static void init_list_stores(void) {
 #define BOARD_ADD(k, v) \
     gtk_list_store_append (board_store, &iter); \
     gtk_list_store_set (board_store, &iter,     \
-                    BOARD_COL_KEY, k,           \
-                    BOARD_COL_VALUE, v,         \
+                    BOARD_COL_KEY, (k),         \
+                    BOARD_COL_VALUE, (v),       \
                     -1);
 
 static void fill_board_list(void) {
@@ -159,8 +159,8 @@ static void fill_board_list(void) {
     char soc_temp[64];
     sprintf(soc_temp, "%0.2f' C", rpi_soc_temp() );
     BOARD_ADD("Board", rpi_board_desc(board) );
-    BOARD_ADD("Model", rpi_board_model(board) );
-    BOARD_ADD("Revision", rpi_board_rev(board) );
+    /* BOARD_ADD("Model", rpi_board_model(board) ); */
+    /* BOARD_ADD("Revision", rpi_board_rev(board) ); */
     BOARD_ADD("Introduction", rpi_board_intro(board) );
     BOARD_ADD("Manufacturer", rpi_board_mfgby(board) );
     BOARD_ADD("RCode", rpi_board_rcode(board) );
@@ -170,6 +170,7 @@ static void fill_board_list(void) {
     BOARD_ADD("SOC (reported)", arm_proc_name(proc) );
     BOARD_ADD("Processor", arm_proc_desc(proc) );
     BOARD_ADD("SOC Temp", soc_temp );
+    BOARD_ADD("Overvolt", (rpi_board_overvolt(board)) ? "yes (warranty void!)" : "never" );
 }
 
 static void update_board_list(void) {
