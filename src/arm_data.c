@@ -1,6 +1,6 @@
 /*
- *
- * Copyright (C) 2017  Burt P. (pburt0@gmail.com)
+ * rpiz - https://github.com/bp0/rpiz
+ * Copyright (C) 2017  Burt P. <pburt0@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
