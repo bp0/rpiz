@@ -152,7 +152,7 @@ static char *strlist_add(cpu_string_list *list, const char* str) {
 #define GET_STR(k, s) if (CHECK_FOR(k)) { p->cores[core].s = strlist_add(p->s, value); continue; }
 #define FIN_PROC() if (core >= 0) if (!p->cores[core].model_name) { p->cores[core].model_name = strlist_add(p->model_name, rep_pname); }
 
-#define REDUP(f) if(p->cores[di].f) { p->cores[i].f = strlist_add(p->f, p->cores[di].f); }
+#define REDUP(f) if(p->cores[di].f && !p->cores[i].f) { p->cores[i].f = strlist_add(p->f, p->cores[di].f); }
 
 #ifndef PROC_CPUINFO
 #define PROC_CPUINFO "/proc/cpuinfo"
