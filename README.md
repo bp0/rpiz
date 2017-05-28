@@ -8,4 +8,4 @@ Requires GTK+ 2. Install Debian's libgtk2.0-dev package or equivalent.
 
 Run
 ---
-> ./rpiz
+> ./rpiz-gtk
