@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * Copyright (C) 2017  Burt P. (pburt0@gmail.com)
  *
  * This program is free software; you can redistribute it and/or
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- * 
+ *
  */
 
 #include "board_rpi.h"
@@ -91,14 +91,14 @@ char *board_col_names[] = {
 
 enum
 {
-   CPU_COL_KEY,
-   CPU_COL_VALUE,
-   CPU_COL_MIN,
-   CPU_COL_MAX,
-   CPU_N_COLUMNS
+   CPUFREQ_COL_KEY,
+   CPUFREQ_COL_VALUE,
+   CPUFREQ_COL_MIN,
+   CPUFREQ_COL_MAX,
+   CPUFREQ_N_COLUMNS
 };
 
-char *cpu_col_names[] = {
+char *cpufreq_col_names[] = {
     "Core",
     "Cur",
     "Min",
@@ -108,41 +108,38 @@ char *cpu_col_names[] = {
 enum
 {
    FLAGS_COL_KEY,
-   FLAGS_COL_EXISTS,
    FLAGS_COL_VALUE,
    FLAGS_N_COLUMNS
 };
 
 char *flags_col_names[] = {
     "Flag",
-    "Present",
     "Meaning"
 };
 
 GtkListStore *board_store;
-GtkListStore *cpu_store;
+GtkListStore *cpufreq_store;
 GtkListStore *flags_store;
 GtkWidget *board_view;
-GtkWidget *cpu_view;
+GtkWidget *cpufreq_view;
 GtkWidget *flags_view;
 
 static void init_list_stores(void) {
-    board_store = 
+    board_store =
     gtk_list_store_new (BOARD_N_COLUMNS,
                         G_TYPE_STRING,
                         G_TYPE_STRING);
 
-    cpu_store = 
-    gtk_list_store_new (CPU_N_COLUMNS,
+    cpufreq_store =
+    gtk_list_store_new (CPUFREQ_N_COLUMNS,
                         G_TYPE_STRING,
                         G_TYPE_STRING,
                         G_TYPE_STRING,
                         G_TYPE_STRING);
 
-    flags_store = 
+    flags_store =
     gtk_list_store_new (FLAGS_N_COLUMNS,
                         G_TYPE_STRING,
-                        G_TYPE_BOOLEAN,
                         G_TYPE_STRING);
 }
 
@@ -195,18 +192,18 @@ static void update_board_list(void) {
     }
 }
 
-#define CPU_ADD(k, v, mi, ma) \
-    gtk_list_store_append (cpu_store, &iter); \
-    gtk_list_store_set (cpu_store, &iter,     \
-                    CPU_COL_KEY, k,           \
-                    CPU_COL_VALUE, v,         \
-                    CPU_COL_MIN, mi,          \
-                    CPU_COL_MAX, ma,          \
+#define CPUFREQ_ADD(k, v, mi, ma) \
+    gtk_list_store_append (cpufreq_store, &iter); \
+    gtk_list_store_set (cpufreq_store, &iter,     \
+                    CPUFREQ_COL_KEY, k,           \
+                    CPUFREQ_COL_VALUE, v,         \
+                    CPUFREQ_COL_MIN, mi,          \
+                    CPUFREQ_COL_MAX, ma,          \
                     -1);
 
-static void fill_cpu_list(void) {
+static void fill_cpufreq_list(void) {
     GtkTreeIter iter;
-    gtk_list_store_clear (cpu_store);
+    gtk_list_store_clear (cpufreq_store);
     int cores = 0, c = 0;
     char id[16] = "", cur[24] = "", min[24] = "", max[24] = "";
     cores = arm_proc_cores(proc);
@@ -215,11 +212,11 @@ static void fill_cpu_list(void) {
         sprintf(cur, "%0.2f MHz", (double)arm_proc_core_khz_cur(proc, c) / 1000);
         sprintf(min, "%0.2f MHz", (double)arm_proc_core_khz_min(proc, c) / 1000);
         sprintf(max, "%0.2f MHz", (double)arm_proc_core_khz_max(proc, c) / 1000);
-        CPU_ADD(id, cur, min, max);
+        CPUFREQ_ADD(id, cur, min, max);
     }
 }
 
-static void update_cpu_list(void) {
+static void update_cpufreq_list(void) {
     GtkTreeIter  iter;
     gboolean     valid;
     gchar *core_id;
@@ -227,27 +224,26 @@ static void update_cpu_list(void) {
     int c;
 
     /* Get first row in list store */
-    valid = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(cpu_store), &iter);
+    valid = gtk_tree_model_get_iter_first(GTK_TREE_MODEL(cpufreq_store), &iter);
 
     while (valid)
     {
-        gtk_tree_model_get(GTK_TREE_MODEL(cpu_store), &iter, CPU_COL_KEY, &core_id, -1);
+        gtk_tree_model_get(GTK_TREE_MODEL(cpufreq_store), &iter, CPUFREQ_COL_KEY, &core_id, -1);
         c = g_ascii_strtoll(core_id, NULL, 10);
         c = arm_proc_core_from_id(proc, c);
 
         sprintf(cur, "%0.2f MHz", (double)arm_proc_core_khz_cur(proc, c) / 1000);
-        gtk_list_store_set(cpu_store, &iter, CPU_COL_VALUE, cur, -1);
+        gtk_list_store_set(cpufreq_store, &iter, CPUFREQ_COL_VALUE, cur, -1);
 
         /* Get next row */
-        valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(cpu_store), &iter);
+        valid = gtk_tree_model_iter_next(GTK_TREE_MODEL(cpufreq_store), &iter);
     }
 }
 
-#define FLAGS_ADD(k, p, v) \
+#define FLAGS_ADD(k, v) \
     gtk_list_store_append (flags_store, &iter); \
     gtk_list_store_set (flags_store, &iter,     \
                     FLAGS_COL_KEY, k,           \
-                    FLAGS_COL_EXISTS, p,        \
                     FLAGS_COL_VALUE, v,         \
                     -1);
 
@@ -259,8 +255,9 @@ static void fill_flags_list(void) {
     while(all_flags[i] != NULL) {
         if (g_strcmp0(all_flags[i], "") != 0) {
             present = arm_proc_has_flag(proc, all_flags[i]);
-            // if (present)
-                FLAGS_ADD(all_flags[i], present, arm_flag_meaning(all_flags[i]) );
+            if (present) {
+                FLAGS_ADD(all_flags[i], arm_flag_meaning(all_flags[i]) );
+            }
         }
         i++;
     }
@@ -309,17 +306,17 @@ static void board_view_init(void) {
     }
 }
 
-static void cpu_view_init(void) {
+static void cpufreq_view_init(void) {
     gint i = 0;
-    for(i = 0; i < CPU_N_COLUMNS; i++) {
+    for(i = 0; i < CPUFREQ_N_COLUMNS; i++) {
         GtkCellRenderer *renderer;
         GtkTreeViewColumn *column;
         renderer = gtk_cell_renderer_text_new ();
-        column = gtk_tree_view_column_new_with_attributes (cpu_col_names[i],
+        column = gtk_tree_view_column_new_with_attributes (cpufreq_col_names[i],
                                                        renderer,
                                                        "text", i,
                                                        NULL);
-        gtk_tree_view_append_column (GTK_TREE_VIEW (cpu_view), column);
+        gtk_tree_view_append_column (GTK_TREE_VIEW (cpufreq_view), column);
     }
 }
 
@@ -328,19 +325,11 @@ static void flags_view_init(void) {
     for(i = 0; i < FLAGS_N_COLUMNS; i++) {
         GtkCellRenderer *renderer;
         GtkTreeViewColumn *column;
-        if (i == FLAGS_COL_EXISTS) {
-            renderer = gtk_cell_renderer_toggle_new ();
-            column = gtk_tree_view_column_new_with_attributes (flags_col_names[i],
-                                                       renderer,
-                                                       "active", i,
-                                                       NULL);
-        } else {
-            renderer = gtk_cell_renderer_text_new ();
-            column = gtk_tree_view_column_new_with_attributes (flags_col_names[i],
+        renderer = gtk_cell_renderer_text_new ();
+        column = gtk_tree_view_column_new_with_attributes (flags_col_names[i],
                                                        renderer,
                                                        "text", i,
                                                        NULL);
-        }
         gtk_tree_view_append_column (GTK_TREE_VIEW (flags_view), column);
     }
 }
@@ -348,7 +337,7 @@ static void flags_view_init(void) {
 static gboolean refresh_data(gpointer data) {
     data = data; /* to avoid a warning */
     update_board_list();
-    update_cpu_list();
+    update_cpufreq_list();
     return G_SOURCE_CONTINUE;
 }
 
@@ -358,9 +347,9 @@ int main( int   argc,
     rpiz_init();
     init_list_stores();
     fill_board_list();
-    fill_cpu_list();
+    fill_cpufreq_list();
     fill_flags_list();
-    
+
     /* dump data to console */
     gchar *summary_text;
     summary_text = rpiz_text_summary();
@@ -392,10 +381,10 @@ int main( int   argc,
     /* notebook pages */
     GtkWidget *about_page = gtk_text_view_new_with_buffer(about_text_buffer);
     board_view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (board_store));
-    cpu_view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (cpu_store));
+    cpufreq_view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (cpufreq_store));
     flags_view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (flags_store));
     board_view_init();
-    cpu_view_init();
+    cpufreq_view_init();
     flags_view_init();
 
     notebook = gtk_notebook_new();
@@ -403,7 +392,7 @@ int main( int   argc,
 
     mbox = gtk_vbox_new (FALSE, 0);
     gtk_box_pack_start (GTK_BOX (mbox), board_view, TRUE, TRUE, 0); gtk_widget_show (board_view);
-    gtk_box_pack_start (GTK_BOX (mbox), cpu_view, FALSE, FALSE, 5); gtk_widget_show (cpu_view);
+    gtk_box_pack_start (GTK_BOX (mbox), cpufreq_view, FALSE, FALSE, 5); gtk_widget_show (cpufreq_view);
 
     add_notebook_page("Board", notebook, mbox, 0);
     add_notebook_page("CPU Flags", notebook, flags_view, 10);

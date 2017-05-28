@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * Copyright (C) 2017  Burt P. (pburt0@gmail.com)
  *
  * This program is free software; you can redistribute it and/or
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- * 
+ *
  */
 
 #include <stdlib.h>
@@ -72,7 +72,7 @@ struct rpi_board {
     char *board_desc;
 
     /* from /proc/device-tree/model */
-    char *dt_model;     
+    char *dt_model;
     /* all from /proc/cpuinfo */
     char *soc, *revision, *serial;
 
@@ -111,7 +111,7 @@ static int rpi_find_board(const char *r_code) {
         if (b->v) strcpy(b->v, value); }
 
 static int rpi_get_cpuinfo_data(rpi_board *b) {
-    char *cpuinfo;    
+    char *cpuinfo;
     kv_scan *kv; char *key, *value;
 
     cpuinfo = get_file_contents(PROC_CPUINFO);
@@ -163,7 +163,7 @@ rpi_board *rpi_board_new() {
             if (strncmp(s->revision, "1000", 4) == 0)
                 s->overvolt = 1;
 
-        s->dt_model = get_file_contents("/proc/device-tree/model");        
+        s->dt_model = get_file_contents("/proc/device-tree/model");
         if (i)
             s->board_desc = rpi_gen_board_name(i);
         else {
@@ -241,7 +241,7 @@ const char *rpi_board_soc(rpi_board *s) {
     if (s) {
         if (s->soc_spec)
             return s->soc_spec;
-        else 
+        else
             return s->soc;
     }
     return NULL;
@@ -259,7 +259,7 @@ float rpi_soc_temp() {
     tmp = get_file_contents("/sys/class/thermal/thermal_zone0/temp");
     if (tmp != NULL)
         temp = (float)atoi(tmp);
-    if (temp) 
+    if (temp)
         temp /= 1000.0f;
     free(tmp);
     return temp;

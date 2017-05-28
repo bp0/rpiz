@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * Copyright (C) 2017  Burt P. (pburt0@gmail.com)
  *
  * This program is free software; you can redistribute it and/or
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- * 
+ *
  */
 
 #include <stdlib.h>
@@ -110,7 +110,7 @@ struct arm_proc {
     cpu_string_list *cpu_part;
     cpu_string_list *cpu_revision;
     cpu_string_list *cpukhz_max_str;
-    
+
     char cpu_name[256];
     char *cpu_desc;
     int max_khz;
@@ -159,12 +159,12 @@ static char *strlist_add(cpu_string_list *list, const char* str) {
     }
     /* not found */
     i = list->count; list->count++;
-    
+
     if (list->strs == NULL)
         list->strs = malloc(sizeof(cpu_string));
     else
         list->strs = realloc(list->strs, sizeof(cpu_string) * list->count);
-    
+
     list->strs[i].str = malloc(strlen(str) + 1);
     strcpy(list->strs[i].str, str);
     list->strs[i].ref_count = 1;
@@ -306,7 +306,7 @@ static char *gen_cpu_desc(arm_proc *p) {
             sprintf(tmp, "%dx %0.2f MHz", p->cpukhz_max_str->strs[i].ref_count, maxfreq);
             sprintf(ret + l, "%s%s", (i>0) ? " + " : "", tmp);
             l += (i>0) ? strlen(tmp) + 3 : strlen(tmp);
-        }        
+        }
     }
     return ret;
 }
@@ -451,7 +451,7 @@ static void dump(arm_proc *p) {
             printf(".proc.core[%d].cpu_variant = %s\n", i, p->cores[i].cpu_variant);
             printf(".proc.core[%d].cpu_part = [%s] %s\n", i, p->cores[i].cpu_part, arm_part(p->cores[i].cpu_implementer, p->cores[i].cpu_part) );
             printf(".proc.core[%d].cpu_revision = %s\n", i, p->cores[i].cpu_revision);
-            printf(".proc.core[%d].freq_khz(min - max / cur) = %d - %d / %d\n", i, 
+            printf(".proc.core[%d].freq_khz(min - max / cur) = %d - %d / %d\n", i,
                 p->cores[i].cpukhz_min, p->cores[i].cpukhz_max, p->cores[i].cpukhz_cur );
         }
     }
@@ -460,7 +460,7 @@ static void dump(arm_proc *p) {
 
 int main(void) {
     arm_proc *p;
-    
+
     p = arm_proc_new();
     if (p == NULL) {
         printf("Scan CPU failed.\n");

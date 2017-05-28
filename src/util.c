@@ -1,5 +1,5 @@
 /*
- * 
+ *
  * Copyright (C) 2017  Burt P. (pburt0@gmail.com)
  *
  * This program is free software; you can redistribute it and/or
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- * 
+ *
  */
 
 #include <stdlib.h>
@@ -57,7 +57,7 @@ char *get_file_contents(const char *file) {
     }
     fclose(fh);
     buff[fs+1] = '\0';
-    
+
     //DEBUG printf("get_file_contents( %s ): fs: %d, pages: %d\n", file, fs, pages);
 
     return buff;

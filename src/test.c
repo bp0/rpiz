@@ -68,7 +68,7 @@ static void dump_proc(arm_proc *p) {
             printf(".proc.core[%d].cpu_variant = %s\n", i, p->cores[i].cpu_variant);
             printf(".proc.core[%d].cpu_part = %s\n", i, p->cores[i].cpu_part);
             printf(".proc.core[%d].cpu_revision = %s\n", i, p->cores[i].cpu_revision);
-            printf(".proc.core[%d].freq_khz(min - max / cur) = %d - %d / %d\n", i, 
+            printf(".proc.core[%d].freq_khz(min - max / cur) = %d - %d / %d\n", i,
                 p->cores[i].cpukhz_min, p->cores[i].cpukhz_max, p->cores[i].cpukhz_cur );
         }
         */
