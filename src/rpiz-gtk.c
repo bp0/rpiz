@@ -20,7 +20,10 @@
 
 #include "board_rpi.h"
 #include "cpu_arm.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-prototypes"
 #include <gtk/gtk.h>
+#pragma GCC diagnostic pop
 
 const char about_text[] =
     "rpiz\n"
@@ -108,12 +111,14 @@ char *cpufreq_col_names[] = {
 enum
 {
    FLAGS_COL_KEY,
+   FLAGS_COL_CORE_COUNT,
    FLAGS_COL_VALUE,
    FLAGS_N_COLUMNS
 };
 
 char *flags_col_names[] = {
     "Flag",
+    "Count",
     "Meaning"
 };
 
@@ -140,6 +145,7 @@ static void init_list_stores(void) {
     flags_store =
     gtk_list_store_new (FLAGS_N_COLUMNS,
                         G_TYPE_STRING,
+                        G_TYPE_INT,
                         G_TYPE_STRING);
 }
 
@@ -240,23 +246,24 @@ static void update_cpufreq_list(void) {
     }
 }
 
-#define FLAGS_ADD(k, v) \
+#define FLAGS_ADD(k, c, v) \
     gtk_list_store_append (flags_store, &iter); \
     gtk_list_store_set (flags_store, &iter,     \
                     FLAGS_COL_KEY, k,           \
+                    FLAGS_COL_CORE_COUNT, c,    \
                     FLAGS_COL_VALUE, v,         \
                     -1);
 
 static void fill_flags_list(void) {
     GtkTreeIter iter;
-    gint i = 0, present = 0;
+    gint i = 0, core_count = 0;
     gchar **all_flags;
     all_flags = g_strsplit(arm_flag_list(), " ", 0);
     while(all_flags[i] != NULL) {
         if (g_strcmp0(all_flags[i], "") != 0) {
-            present = arm_proc_has_flag(proc, all_flags[i]);
-            if (present) {
-                FLAGS_ADD(all_flags[i], arm_flag_meaning(all_flags[i]) );
+            core_count = arm_proc_has_flag(proc, all_flags[i]);
+            if (core_count) {
+                FLAGS_ADD(all_flags[i], core_count, arm_flag_meaning(all_flags[i]) );
             }
         }
         i++;
