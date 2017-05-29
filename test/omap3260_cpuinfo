@@ -1,0 +1,13 @@
+Processor	: ARMv7 Processor rev 2 (v7l)
+BogoMIPS	: 998.84
+Features	: swp half thumb fastmult vfp edsp neon vfpv3 
+CPU implementer	: 0x41
+CPU architecture: 7
+CPU variant	: 0x3
+CPU part	: 0xc08
+CPU revision	: 2
+
+Hardware	: mapphone_CDMA
+Revision	: 0000
+Serial		: 0000000000000000
+
