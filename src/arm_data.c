@@ -100,7 +100,7 @@ static struct {
     /*dt*/ { 0xb76,	"ARM1176" },
     /*dt*/ { 0xc05,	"Cortex-A5" },
     /*d */ { 0xc07,	"Cortex-A7 MPCore" },
-    /*d */ { 0xc08,	"Cortex-A8" },
+    /*dt*/ { 0xc08,	"Cortex-A8" },
     /*dt*/ { 0xc09,	"Cortex-A9" },
     /*d */ { 0xc0e,	"Cortex-A17 MPCore" },
     /*d */ { 0xc0f,	"Cortex-A15" },
