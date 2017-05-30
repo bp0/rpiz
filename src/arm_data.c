@@ -80,6 +80,7 @@ static struct {
 } tab_arm_implementer[] = {
     { 0x41,	"ARM" },
     { 0x44,	"Intel (formerly DEC) StrongARM" },
+    { 0x4e,	"nVidia" },
     { 0x54,	"Texas Instruments" },
     { 0x56,	"Marvell" },
     { 0x69,	"Intel XScale" },
