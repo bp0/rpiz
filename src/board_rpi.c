@@ -85,6 +85,17 @@ struct rpi_board {
     rpiz_fields *fields;
 };
 
+int rpi_board_check() {
+    char *dtm;
+    int ret = 0;
+    dtm = get_file_contents("/proc/device-tree/model");
+    if (dtm) {
+        ret = !(strstr(dtm, "Raspberry Pi") == NULL);
+        free(dtm);
+    }
+    return ret;
+}
+
 static int rpi_find_board(const char *r_code) {
     int i = 0;
     char *r = (char*)r_code;

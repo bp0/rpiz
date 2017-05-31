@@ -18,30 +18,14 @@
  *
  */
 
-#ifndef _RPI_H_
-#define _RPI_H_
+#ifndef _BOARD_H_
+#define _BOARD_H_
 
 #include "fields.h"
 
-int rpi_board_check(void);
+int board_init(void);
+void board_cleanup(void);
 
-typedef struct rpi_board rpi_board;
-
-rpi_board *rpi_board_new(void);
-void rpi_board_free(rpi_board *);
-
-const char *rpi_board_desc(rpi_board *);
-const char *rpi_board_rcode(rpi_board *);
-const char *rpi_board_serial(rpi_board *);
-const char *rpi_board_model(rpi_board *);
-const char *rpi_board_rev(rpi_board *);
-const char *rpi_board_intro(rpi_board *);
-const char *rpi_board_mfgby(rpi_board *);
-const char *rpi_board_mem_spec(rpi_board *);
-const char *rpi_board_soc(rpi_board *);
-int rpi_board_overvolt(rpi_board *);
-float rpi_soc_temp(void);
-
-rpiz_fields *rpi_board_fields(rpi_board *);
+rpiz_fields *board_fields(void);
 
 #endif

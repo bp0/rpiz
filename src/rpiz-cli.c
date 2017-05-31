@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "board_rpi.h"
+#include "board.h"
 #include "cpu_arm.h"
 
 static void dump_fields(rpiz_fields *f) {
@@ -58,28 +58,27 @@ static void dump_proc(arm_proc *p) {
 }
 
 int main(void) {
-    rpi_board *b;
+    //rpi_board *b;
     arm_proc *p;
     rpiz_fields *bf, *pf;
 
-    b = rpi_board_new();
+    board_init();
+
     p = arm_proc_new();
-    if (b == NULL) {
-        printf("Scan board failed.\n");
-        return 1;
-    }
     if (p == NULL) {
         printf("Scan proc failed.\n");
         return 1;
     }
     //dump_proc(p);
 
-    bf = rpi_board_fields(b);
+    //bf = rpi_board_fields(b);
+    bf = board_fields();
     dump_fields(bf);
     pf = arm_proc_fields(p);
     dump_fields(pf);
 
     arm_proc_free(p);
-    rpi_board_free(b);
+    //rpi_board_free(b);
+    board_cleanup();
     return 0;
 }

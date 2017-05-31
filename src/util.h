@@ -22,6 +22,7 @@
 #define _UTIL_H_
 
 char *get_file_contents(const char *file);
+int dir_exists(const char* path);
 
 typedef struct kv_scan kv_scan;
 

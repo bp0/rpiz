@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <dirent.h>
 #include "util.h"
 
 char *get_file_contents(const char *file) {
@@ -61,6 +62,15 @@ char *get_file_contents(const char *file) {
     //DEBUG printf("get_file_contents( %s ): fs: %d, pages: %d\n", file, fs, pages);
 
     return buff;
+}
+
+int dir_exists(const char* path) {
+    DIR* dir = opendir(path);
+    if (dir) {
+        closedir(dir);
+        return 1;
+    } else
+        return 0;
 }
 
 #define MAXLEN_KEY 128
