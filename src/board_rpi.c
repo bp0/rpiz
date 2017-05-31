@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "util.h"
+#include "board_dt.h"
 #include "board_rpi.h"
 
 static char unk[] = "(Unknown)";
@@ -88,7 +89,7 @@ struct rpi_board {
 int rpi_board_check() {
     char *dtm;
     int ret = 0;
-    dtm = get_file_contents("/proc/device-tree/model");
+    dtm = get_dt_string("model");
     if (dtm) {
         ret = !(strstr(dtm, "Raspberry Pi") == NULL);
         free(dtm);
@@ -176,7 +177,7 @@ rpi_board *rpi_board_new() {
             if (strncmp(s->revision, "1000", 4) == 0)
                 s->overvolt = 1;
 
-        s->dt_model = get_file_contents("/proc/device-tree/model");
+        s->dt_model = get_dt_string("model");
         if (i)
             s->board_desc = rpi_gen_board_name(i);
         else {
@@ -312,7 +313,7 @@ rpiz_fields *rpi_board_fields(rpi_board *s) {
             ADDFIELD("rpi_intro",     0, 0, "Introduction", rpi_board_intro );
             ADDFIELD("rpi_mfgby",     0, 0, "Manufacturer", rpi_board_mfgby );
             ADDFIELD("rpi_rcode",     0, 0, "RCode", rpi_board_rcode );
-            ADDFIELD("rpi_serial",    0, 0, "Serial No.", rpi_board_serial );
+            ADDFIELD("board_serial",  0, 0, "Serial Number", rpi_board_serial );
             ADDFIELD("rpi_overvolt",  0, 1, "Overvolt", rpi_board_overvolt_str );
             ADDFIELD("rpi_temp",      1, 1, "SOC Temp",   rpi_soc_temp_str );
         }

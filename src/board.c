@@ -20,11 +20,13 @@
 
 #include <stdlib.h>
 #include "board.h"
-#include "board_rpi.h"
+#include "board_dt.h"
 #include "board_dmi.h"
+#include "board_rpi.h"
 
 typedef enum {
     BT_UNKNOWN = 0,
+    BT_DT,
     BT_RPI,
     BT_DMI,
     BT_N_TYPES,
@@ -32,14 +34,20 @@ typedef enum {
 
 struct {
     board_type type;
+    dt_board *dt;
     rpi_board *rpi;
     dmi_board *dmi;
 } board;
 
 int board_init() {
-    if (rpi_board_check()) {
-        board.rpi = rpi_board_new();
-        board.type = BT_RPI;
+    if (dt_board_check()) {
+        if (rpi_board_check()) {
+            board.rpi = rpi_board_new();
+            board.type = BT_RPI;
+        } else {
+            board.dt = dt_board_new();
+            board.type = BT_DT;
+        }
     } else if (dmi_board_check()) {
         board.dmi = dmi_board_new();
         board.type = BT_DMI;
@@ -49,12 +57,15 @@ int board_init() {
 }
 
 void board_cleanup() {
+    if (board.dt) dt_board_free(board.dt);
     if (board.rpi) rpi_board_free(board.rpi);
     if (board.dmi) dmi_board_free(board.dmi);
 }
 
 rpiz_fields *board_fields() {
     switch (board.type) {
+        case (BT_DT):
+            return dt_board_fields(board.dt);
         case (BT_RPI):
             return rpi_board_fields(board.rpi);
         case (BT_DMI):
