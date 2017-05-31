@@ -18,28 +18,19 @@
  *
  */
 
-#ifndef _RPI_H_
-#define _RPI_H_
+#ifndef _FIELDS_H_
+#define _FIELDS_H_
 
-#include "fields.h"
+typedef struct rpiz_fields rpiz_fields;
 
-typedef struct rpi_board rpi_board;
+typedef char* (*rpiz_fields_get_func)(void *data);
 
-rpi_board *rpi_board_new(void);
-void rpi_board_free(rpi_board *);
-
-const char *rpi_board_desc(rpi_board *);
-const char *rpi_board_rcode(rpi_board *);
-const char *rpi_board_serial(rpi_board *);
-const char *rpi_board_model(rpi_board *);
-const char *rpi_board_rev(rpi_board *);
-const char *rpi_board_intro(rpi_board *);
-const char *rpi_board_mfgby(rpi_board *);
-const char *rpi_board_mem_spec(rpi_board *);
-const char *rpi_board_soc(rpi_board *);
-int rpi_board_overvolt(rpi_board *);
-float rpi_soc_temp(void);
-
-rpiz_fields *rpi_board_fields(rpi_board *);
+rpiz_fields *fields_new(void);
+rpiz_fields *fields_next(rpiz_fields *);
+rpiz_fields *fields_update_bytag(rpiz_fields *, char *tag, int live_update, int own_value, char *name, rpiz_fields_get_func get_func, void *data);
+int fields_islive(rpiz_fields *, char *tag);
+int fields_get(rpiz_fields *, char **tag, char **name, char **value);
+int fields_get_bytag(rpiz_fields *, char *tag, char **name, char **value);
+void fields_free(rpiz_fields *);
 
 #endif

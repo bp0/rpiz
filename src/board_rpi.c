@@ -81,6 +81,8 @@ struct rpi_board {
     /* all point into the rpi_boardinfo table -
      * no need to free */
     char *intro, *model, *pcb, *mem_spec, *mfg, *soc_spec;
+
+    rpiz_fields *fields;
 };
 
 static int rpi_find_board(const char *r_code) {
@@ -172,6 +174,8 @@ rpi_board *rpi_board_new() {
             else
                 s->board_desc = unk;
         }
+
+        s->fields = NULL;
     }
     return s;
 }
@@ -184,6 +188,8 @@ void rpi_board_free(rpi_board *s) {
         if (s->board_desc != s->dt_model && s->board_desc != unk)
             free(s->board_desc);
         free(s->dt_model);
+        if (s->fields)
+            fields_free(s->fields);
         free(s);
     }
 }
@@ -264,3 +270,43 @@ float rpi_soc_temp() {
     free(tmp);
     return temp;
 }
+
+static char* rpi_soc_temp_str(void *s) {
+    float t = rpi_soc_temp();
+    char *buff;
+    s = s; /* avoid a warning */
+    buff = malloc(128);
+    if (buff)
+        snprintf(buff, 127, "%0.2f'C", t);
+    return buff;
+}
+
+static char* rpi_board_overvolt_str(rpi_board *s) {
+    char *buff = NULL;
+    if (s) {
+        buff = malloc(128);
+        if (buff)
+            snprintf(buff, 127, "%s", (rpi_board_overvolt(s)) ? "yes (warranty void!)" : "never" );
+    }
+    return buff;
+}
+
+#define ADDFIELD(t, l, o, n, f) fields_update_bytag(s->fields, t, l, o, n, (rpiz_fields_get_func)f, (void*)s)
+rpiz_fields *rpi_board_fields(rpi_board *s) {
+    if (s) {
+        if (!s->fields) {
+            /* first insert creates */
+            s->fields =
+            ADDFIELD("board_name",    0, 0, "Board Name", rpi_board_desc );
+            ADDFIELD("rpi_intro",     0, 0, "Introduction", rpi_board_intro );
+            ADDFIELD("rpi_mfgby",     0, 0, "Manufacturer", rpi_board_mfgby );
+            ADDFIELD("rpi_rcode",     0, 0, "RCode", rpi_board_rcode );
+            ADDFIELD("rpi_serial",    0, 0, "Serial No.", rpi_board_serial );
+            ADDFIELD("rpi_overvolt",  0, 1, "Overvolt", rpi_board_overvolt_str );
+            ADDFIELD("rpi_temp",      1, 1, "SOC Temp",   rpi_soc_temp_str );
+        }
+        return s->fields;
+    }
+    return NULL;
+}
+

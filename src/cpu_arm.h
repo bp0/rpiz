@@ -21,6 +21,8 @@
 #ifndef _ARMCPU_H_
 #define _ARMCPU_H_
 
+#include "fields.h"
+
 #include "arm_data.h"
 const char *arm_flag_list(void);
 
@@ -38,5 +40,7 @@ int arm_proc_core_id(arm_proc *, int core);
 int arm_proc_core_khz_min(arm_proc *, int core);
 int arm_proc_core_khz_max(arm_proc *, int core);
 int arm_proc_core_khz_cur(arm_proc *, int core);
+
+rpiz_fields *arm_proc_fields(arm_proc *);
 
 #endif

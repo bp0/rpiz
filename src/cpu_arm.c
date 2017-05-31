@@ -89,6 +89,8 @@ struct arm_proc {
     int max_khz;
     int core_count;
     arm_core cores[MAX_CORES];
+
+    rpiz_fields *fields;
 };
 
 static int get_cpu_int(const char* file, int cpuid) {
@@ -361,6 +363,7 @@ void arm_proc_free(arm_proc *s) {
         strlist_free(s->decoded_name);
         strlist_free(s->cpukhz_max_str);
         strlist_free(s->each_flag);
+        fields_free(s->fields);
         free(s->cpu_desc);
         free(s);
     }
@@ -440,6 +443,31 @@ int arm_proc_core_khz_cur(arm_proc *s, int core) {
             return s->cores[core].cpukhz_cur;
         }
     return 0;
+}
+
+static char* arm_proc_cores_str(arm_proc *s) {
+    char *buff = NULL;
+    if (s) {
+        buff = malloc(128);
+        if (buff)
+            snprintf(buff, 127, "%d", arm_proc_cores(s) );
+    }
+    return buff;
+}
+
+#define ADDFIELD(t, l, o, n, f) fields_update_bytag(s->fields, t, l, o, n, (rpiz_fields_get_func)f, (void*)s)
+rpiz_fields *arm_proc_fields(arm_proc *s) {
+    if (s) {
+        if (!s->fields) {
+            /* first insert creates */
+            s->fields =
+            ADDFIELD("proc_name",     0, 0, "Proccesor Name", arm_proc_name );
+            ADDFIELD("proc_desc",     0, 0, "Proccesor Description", arm_proc_desc );
+            ADDFIELD("proc_count",    0, 1, "Core Count", arm_proc_cores_str );
+        }
+        return s->fields;
+    }
+    return NULL;
 }
 
 #ifdef DEBUG_ARMCPU

@@ -24,31 +24,12 @@
 #include "board_rpi.h"
 #include "cpu_arm.h"
 
-static void dump_board(rpi_board *b) {
-    if (b) {
-        printf(
-        "rpi_board_desc(): %s\n"
-        "rpi_board_model(): %s\n"
-        "rpi_board_rev(): %s\n"
-        "rpi_board_intro(): %s\n"
-        "rpi_board_mfgby(): %s\n"
-        "rpi_board_rcode(): %s\n"
-        "rpi_board_serial(): %s\n"
-        "rpi_board_mem_spec(): %s\n"
-        "rpi_board_soc(): %s\n"
-        "rpi_soc_temp(): %0.2f' C\n"
-        "%s",
-        rpi_board_desc(b),
-        rpi_board_model(b),
-        rpi_board_rev(b),
-        rpi_board_intro(b),
-        rpi_board_mfgby(b),
-        rpi_board_rcode(b),
-        rpi_board_serial(b),
-        rpi_board_mem_spec(b),
-        rpi_board_soc(b),
-        rpi_soc_temp(),
-        "");
+static void dump_fields(rpiz_fields *f) {
+    char *t, *n, *v;
+    while (f) {
+        fields_get(f, &t, &n, &v);
+        printf("[%s] %s = %s\n", t, n, v);
+        f = fields_next(f);
     }
 }
 
@@ -79,6 +60,7 @@ static void dump_proc(arm_proc *p) {
 int main(void) {
     rpi_board *b;
     arm_proc *p;
+    rpiz_fields *bf, *pf;
 
     b = rpi_board_new();
     p = arm_proc_new();
@@ -90,8 +72,13 @@ int main(void) {
         printf("Scan proc failed.\n");
         return 1;
     }
-    dump_board(b);
-    dump_proc(p);
+    //dump_proc(p);
+
+    bf = rpi_board_fields(b);
+    dump_fields(bf);
+    pf = arm_proc_fields(p);
+    dump_fields(pf);
+
     arm_proc_free(p);
     rpi_board_free(b);
     return 0;
