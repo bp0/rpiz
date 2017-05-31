@@ -43,7 +43,7 @@ static char *get_dmi_string(char *p) {
     snprintf(fn, 256, "/sys/class/dmi/id/%s", p);
     ret = get_file_contents(fn);
     if (ret) {
-        while(rep = strchr(ret, '\n') ) *rep = ' ';
+        while((rep = strchr(ret, '\n'))) *rep = ' ';
     }
     return ret;
 }
