@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CFLAGS="-O2 -Wall -Wextra -Wmissing-prototypes -Wstrict-prototypes -Werror=implicit-function-declaration -Werror=missing-prototypes"
-SRCC="board.c board_rpi.c board_dt.c board_dmi.c cpu_arm.c arm_data.c fields.c util.c"
+SRCC="board.c board_rpi.c board_dt.c board_dmi.c cpu.c cpu_arm.c cpu_x86.c arm_data.c x86_data.c fields.c util.c"
 
 cd src
 rm -f ../rpiz-gtk ../rpiz-cli

@@ -18,38 +18,11 @@
  *
  */
 
-#ifndef _UTIL_H_
-#define _UTIL_H_
+#ifndef _X86DATA_H_
+#define _X86DATA_H_
 
-char *get_file_contents(const char *file);
-int dir_exists(const char* path);
-
-/* get int from /sys/devices/system/cpu/cpu<cpuid>/<item> */
-int get_cpu_int(const char* item, int cpuid);
-
-/* -- string structures used in cpu_*  -- */
-
-typedef struct {
-    int ref_count;
-    char *str;
-} cpu_string;
-
-typedef struct {
-    int count;
-    cpu_string *strs;
-} cpu_string_list;
-
-cpu_string_list *strlist_new(void);
-void strlist_free(cpu_string_list *list);
-char *strlist_add_w(cpu_string_list *list, const char* str, int weight);
-char *strlist_add(cpu_string_list *list, const char* str);
-
-/* -- key / value scan  -- */
-typedef struct kv_scan kv_scan;
-
-kv_scan *kv_new(char *buffer);
-kv_scan *kv_new_file(const char *file);
-int kv_next(kv_scan *, char **key, char **value);
-void kv_free(kv_scan *);
+/* cpu flags from /proc/cpuinfo */
+const char *x86_flag_list(void);                 /* list of all known flags */
+const char *x86_flag_meaning(const char *flag);  /* lookup flag meaning */
 
 #endif

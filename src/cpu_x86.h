@@ -18,38 +18,29 @@
  *
  */
 
-#ifndef _UTIL_H_
-#define _UTIL_H_
+#ifndef _X86CPU_H_
+#define _X86CPU_H_
 
-char *get_file_contents(const char *file);
-int dir_exists(const char* path);
+#include "fields.h"
 
-/* get int from /sys/devices/system/cpu/cpu<cpuid>/<item> */
-int get_cpu_int(const char* item, int cpuid);
+//#include "arm_data.h"
+//const char *arm_flag_list(void);
 
-/* -- string structures used in cpu_*  -- */
+typedef struct x86_proc x86_proc;
 
-typedef struct {
-    int ref_count;
-    char *str;
-} cpu_string;
+x86_proc *x86_proc_new(void);
+void x86_proc_free(x86_proc *);
 
-typedef struct {
-    int count;
-    cpu_string *strs;
-} cpu_string_list;
+const char *x86_proc_name(x86_proc *);
+const char *x86_proc_desc(x86_proc *);
+int x86_proc_has_flag(x86_proc *, const char *flag); /* returns core count with flag */
+int x86_proc_cores(x86_proc *);
+int x86_proc_core_from_id(x86_proc *, int id); /* -1 if not found */
+int x86_proc_core_id(x86_proc *, int core);
+int x86_proc_core_khz_min(x86_proc *, int core);
+int x86_proc_core_khz_max(x86_proc *, int core);
+int x86_proc_core_khz_cur(x86_proc *, int core);
 
-cpu_string_list *strlist_new(void);
-void strlist_free(cpu_string_list *list);
-char *strlist_add_w(cpu_string_list *list, const char* str, int weight);
-char *strlist_add(cpu_string_list *list, const char* str);
-
-/* -- key / value scan  -- */
-typedef struct kv_scan kv_scan;
-
-kv_scan *kv_new(char *buffer);
-kv_scan *kv_new_file(const char *file);
-int kv_next(kv_scan *, char **key, char **value);
-void kv_free(kv_scan *);
+rpiz_fields *x86_proc_fields(x86_proc *);
 
 #endif

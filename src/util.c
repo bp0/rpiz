@@ -73,6 +73,62 @@ int dir_exists(const char* path) {
         return 0;
 }
 
+int get_cpu_int(const char* item, int cpuid) {
+    char fn[256];
+    char *fc = NULL;
+    int ret = 0;
+    snprintf(fn, 256, "/sys/devices/system/cpu/cpu%d/%s", cpuid, item);
+    fc = get_file_contents(fn);
+    if (fc) {
+        ret = atol(fc);
+        free(fc);
+    }
+    return ret;
+}
+
+cpu_string_list *strlist_new(void) {
+    cpu_string_list *list = malloc( sizeof(cpu_string_list) );
+    list->count = 0;
+    list->strs = NULL;
+    return list;
+}
+
+void strlist_free(cpu_string_list *list) {
+    int i;
+    for (i = 0; i < list->count; i++) {
+        free(list->strs[i].str);
+    }
+    free(list);
+    list = NULL;
+}
+
+char *strlist_add_w(cpu_string_list *list, const char* str, int weight) {
+    int i;
+    for (i = 0; i < list->count; i++) {
+        if (strcmp(list->strs[i].str, str) == 0) {
+            /* found */
+            list->strs[i].ref_count += weight;
+            return list->strs[i].str;
+        }
+    }
+    /* not found */
+    i = list->count; list->count++;
+
+    if (list->strs == NULL)
+        list->strs = malloc(sizeof(cpu_string));
+    else
+        list->strs = realloc(list->strs, sizeof(cpu_string) * list->count);
+
+    list->strs[i].str = malloc(strlen(str) + 1);
+    strcpy(list->strs[i].str, str);
+    list->strs[i].ref_count = weight;
+    return list->strs[i].str;
+}
+
+char *strlist_add(cpu_string_list *list, const char* str) {
+    return strlist_add_w(list, str, 1);
+}
+
 #define MAXLEN_KEY 128
 #define MAXLEN_VALUE 512
 

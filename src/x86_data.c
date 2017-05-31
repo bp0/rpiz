@@ -21,30 +21,38 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "board.h"
-#include "cpu.h"
+#include "x86_data.h"
 
-static void dump_fields(rpiz_fields *f) {
-    char *t, *n, *v;
-    while (f) {
-        fields_get(f, &t, &n, &v);
-        printf("[%s] %s = %s\n", t, n, v);
-        f = fields_next(f);
+/* sources:
+ */
+static struct {
+    char *name, *meaning;
+} tab_flag_meaning[] = {
+    { NULL, NULL},
+};
+
+static char all_flags[1024] = "";
+
+#define APPEND_FLAG(f) strcat(all_flags, f); strcat(all_flags, " ");
+const char *x86_flag_list() {
+    int i = 0, built = 0;
+    built = strlen(all_flags);
+    if (!built) {
+        while(tab_flag_meaning[i].name != NULL) {
+            APPEND_FLAG(tab_flag_meaning[i].name);
+            i++;
+        }
     }
+    return all_flags;
 }
 
-int main(void) {
-    rpiz_fields *bf, *pf;
-
-    board_init();
-    cpu_init();
-
-    bf = board_fields();
-    dump_fields(bf);
-    pf = cpu_fields();
-    dump_fields(pf);
-
-    board_cleanup();
-    cpu_cleanup();
-    return 0;
+const char *x86_flag_meaning(const char *flag) {
+    int i = 0;
+    if (flag)
+    while(tab_flag_meaning[i].name != NULL) {
+        if (strcmp(tab_flag_meaning[i].name, flag) == 0)
+            return tab_flag_meaning[i].meaning;
+        i++;
+    }
+    return NULL;
 }
