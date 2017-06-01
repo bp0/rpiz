@@ -23,8 +23,8 @@
 
 #include "fields.h"
 
-//#include "arm_data.h"
-//const char *arm_flag_list(void);
+#include "x86_data.h"
+const char *x86_flag_list(void);
 
 typedef struct x86_proc x86_proc;
 
@@ -34,12 +34,16 @@ void x86_proc_free(x86_proc *);
 const char *x86_proc_name(x86_proc *);
 const char *x86_proc_desc(x86_proc *);
 int x86_proc_has_flag(x86_proc *, const char *flag); /* returns core count with flag */
+int x86_proc_count(x86_proc *);
 int x86_proc_cores(x86_proc *);
-int x86_proc_core_from_id(x86_proc *, int id); /* -1 if not found */
-int x86_proc_core_id(x86_proc *, int core);
-int x86_proc_core_khz_min(x86_proc *, int core);
-int x86_proc_core_khz_max(x86_proc *, int core);
-int x86_proc_core_khz_cur(x86_proc *, int core);
+int x86_proc_threads(x86_proc *);
+
+int x86_proc_thread_from_id(x86_proc *, int id); /* -1 if not found */
+int x86_proc_thread_id(x86_proc *, int thread);
+
+int x86_proc_thread_khz_min(x86_proc *, int thread);
+int x86_proc_thread_khz_max(x86_proc *, int thread);
+int x86_proc_thread_khz_cur(x86_proc *, int thread);
 
 rpiz_fields *x86_proc_fields(x86_proc *);
 

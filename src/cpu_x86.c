@@ -23,9 +23,8 @@
 #include <string.h>
 #include "util.h"
 #include "cpu_x86.h"
-#include "x86_data.h"
 
-#define MAX_CORES 128
+#define MAX_THREADS 128
 
 static int search_for_flag(char *flags, const char *flag) {
     char *p = strstr(flags, flag);
@@ -47,7 +46,7 @@ static int search_for_flag(char *flags, const char *flag) {
 }
 
 typedef struct {
-    int id;
+    int id, core, proc;
     int cpukhz_min, cpukhz_max, cpukhz_cur;
 
     /* point to a cpu_string.str */
@@ -58,8 +57,11 @@ typedef struct {
     char *pm_flags;
     char *cpukhz_max_str;
 
+    char *physical_id;
+    char *core_id;
+
     int bug_fdiv, bug_hlt, bug_f00f, bug_coma;
-} x86_core;
+} x86_thread;
 
 struct x86_proc {
     cpu_string_list *model_name;
@@ -69,22 +71,28 @@ struct x86_proc {
     cpu_string_list *pm_flags;
     cpu_string_list *cpukhz_max_str;
 
+    cpu_string_list *physical_id;
+    cpu_string_list *core_id;
+
     cpu_string_list *each_flag;
 
     char cpu_name[256];
     char *cpu_desc;
     int max_khz;
+
+    int thread_count;
+    x86_thread threads[MAX_THREADS];
     int core_count;
-    x86_core cores[MAX_CORES];
+    int proc_count;
 
     rpiz_fields *fields;
 };
 
 #define CHECK_FOR(k) (strncmp(k, key, (strlen(k) < strlen(key)) ? strlen(k) : strlen(key)) == 0)
-#define GET_STR(k, s) if (CHECK_FOR(k)) { p->cores[core].s = strlist_add(p->s, value); continue; }
-#define FIN_PROC() if (core >= 0) if (!p->cores[core].model_name) { p->cores[core].model_name = strlist_add(p->model_name, rep_pname); }
+#define GET_STR(k, s) if (CHECK_FOR(k)) { p->threads[thread].s = strlist_add(p->s, value); continue; }
+#define FIN_PROC() if (thread >= 0) if (!p->threads[thread].model_name) { p->threads[thread].model_name = strlist_add(p->model_name, rep_pname); }
 
-#define REDUP(f) if(p->cores[di].f && !p->cores[i].f) { p->cores[i].f = strlist_add(p->f, p->cores[di].f); }
+#define REDUP(f) if(p->threads[di].f && !p->threads[i].f) { p->threads[i].f = strlist_add(p->f, p->threads[di].f); }
 
 #ifndef PROC_CPUINFO
 #define PROC_CPUINFO "/proc/cpuinfo"
@@ -92,7 +100,7 @@ struct x86_proc {
 
 static int scan_cpu(x86_proc* p) {
     kv_scan *kv; char *key, *value;
-    int core = -1;
+    int thread = -1;
     int i, di;
     char rep_pname[256] = "";
     char tmp_maxfreq[128];
@@ -110,24 +118,27 @@ static int scan_cpu(x86_proc* p) {
 
             if (CHECK_FOR("processor")) {
                 FIN_PROC();
-                core++;
-                memset(&p->cores[core], 0, sizeof(x86_core));
-                p->cores[core].id = atoi(value);
+                thread++;
+                memset(&p->threads[thread], 0, sizeof(x86_thread));
+                p->threads[thread].id = atoi(value);
                 continue;
             }
 
-            if (core < 0) {
+            if (thread < 0) {
                 if ( CHECK_FOR("model name")
                      || CHECK_FOR("flags") ) {
                     /* this cpuinfo doesn't provide processor : n
-                     * there is prolly only one core */
-                    core++;
-                    memset(&p->cores[core], 0, sizeof(x86_core));
-                    p->cores[core].id = 0;
+                     * there is prolly only one thread */
+                    thread++;
+                    memset(&p->threads[thread], 0, sizeof(x86_thread));
+                    p->threads[thread].id = 0;
                 }
             }
-            if (core >= 0) {
+            if (thread >= 0) {
                 GET_STR("model name", model_name);
+
+                GET_STR("physical id", physical_id);
+                GET_STR("core id", core_id);
 
                 GET_STR("flags", flags);
                 GET_STR("bugs", bug_flags);
@@ -135,19 +146,19 @@ static int scan_cpu(x86_proc* p) {
 
                 if (CHECK_FOR("fdiv_bug") ) {
                     if (strncmp(value, "yes", 3) == 0)
-                        p->cores[core].bug_fdiv = 1;
+                        p->threads[thread].bug_fdiv = 1;
                 }
                 if (CHECK_FOR("hlt_bug")) {
                     if (strncmp(value, "yes", 3) == 0)
-                        p->cores[core].bug_hlt = 1;
+                        p->threads[thread].bug_hlt = 1;
                 }
                 if (CHECK_FOR("f00f_bug")) {
                     if (strncmp(value, "yes", 3) == 0)
-                        p->cores[core].bug_f00f = 1;
+                        p->threads[thread].bug_f00f = 1;
                 }
                 if (CHECK_FOR("coma_bug")) {
                     if (strncmp(value, "yes", 3) == 0)
-                        p->cores[core].bug_coma = 1;
+                        p->threads[thread].bug_coma = 1;
                 }
 
             }
@@ -157,12 +168,12 @@ static int scan_cpu(x86_proc* p) {
     } else
         return 0;
 
-    p->core_count = core + 1;
+    p->thread_count = thread + 1;
 
     /* re-duplicate missing data for /proc/cpuinfo variant that de-duplicated it */
-    di = p->core_count - 1;
+    di = p->thread_count - 1;
     for (i = di; i >= 0; i--) {
-        if (p->cores[i].flags)
+        if (p->threads[i].flags)
             di = i;
         else {
             REDUP(flags);
@@ -171,42 +182,57 @@ static int scan_cpu(x86_proc* p) {
         }
     }
 
+    /* thread/core stuff */
+    for (i = 0; i < p->thread_count; i++) {
+        if (p->threads[i].core_id)
+            p->threads[i].core = strtol(p->threads[i].core_id, NULL, 0);
+        else
+            p->threads[i].core = p->threads[i].id;
+
+        if (p->threads[i].physical_id)
+            p->threads[i].proc = strtol(p->threads[i].physical_id, NULL, 0);
+    }
+    p->core_count = p->core_id->count;
+    p->proc_count = p->physical_id->count;
+    if (!p->core_count) p->core_count = p->thread_count;
+    if (!p->proc_count) p->proc_count = p->thread_count;
+
     /* data not from /proc/cpuinfo */
-    for (i = 0; i < p->core_count; i++) {
-         if (p->cores[i].bug_flags == NULL) {
+    for (i = 0; i < p->thread_count; i++) {
+        if (p->threads[i].bug_flags == NULL) {
             /* make bugs list on old kernels that don't offer one */
             tmp_str = malloc(128);
             if (tmp_str) {
                 memset(tmp_str, 0, 128);
                 snprintf(tmp_str, 127, "%s%s%s%s%s%s%s%s%s%s",
-                    p->cores[i].bug_fdiv ? " fdiv" : "",
-                    p->cores[i].bug_hlt  ? " _hlt" : "",
-                    p->cores[i].bug_f00f ? " f00f" : "",
-                    p->cores[i].bug_coma ? " coma" : "",
+                    p->threads[i].bug_fdiv ? " fdiv" : "",
+                    p->threads[i].bug_hlt  ? " _hlt" : "",
+                    p->threads[i].bug_f00f ? " f00f" : "",
+                    p->threads[i].bug_coma ? " coma" : "",
                     /* these bug workarounds were reported as "features" in older kernels */
-                    search_for_flag(p->cores[i].flags, "fxsave_leak")     ? " fxsave_leak" : "",
-                    search_for_flag(p->cores[i].flags, "clflush_monitor") ? " clflush_monitor" : "",
-                    search_for_flag(p->cores[i].flags, "11ap")            ? " 11ap" : "",
-                    search_for_flag(p->cores[i].flags, "tlb_mmatch")      ? " tlb_mmatch" : "",
-                    search_for_flag(p->cores[i].flags, "apic_c1e")        ? " apic_c1e" : "",
+                    search_for_flag(p->threads[i].flags, "fxsave_leak")     ? " fxsave_leak" : "",
+                    search_for_flag(p->threads[i].flags, "clflush_monitor") ? " clflush_monitor" : "",
+                    search_for_flag(p->threads[i].flags, "11ap")            ? " 11ap" : "",
+                    search_for_flag(p->threads[i].flags, "tlb_mmatch")      ? " tlb_mmatch" : "",
+                    search_for_flag(p->threads[i].flags, "apic_c1e")        ? " apic_c1e" : "",
                     ""); /* just to make adding lines easier */
                 if (strlen(tmp_str) > 0)
-                    p->cores[i].bug_flags = strlist_add(p->bug_flags, tmp_str + 1); /* skip the first space */
+                    p->threads[i].bug_flags = strlist_add(p->bug_flags, tmp_str + 1); /* skip the first space */
                 free(tmp_str); tmp_str = NULL;
             }
         }
 
         /* decoded names */
         tmp_str = strdup("(Unknown)");
-        p->cores[i].decoded_name = strlist_add(p->decoded_name, tmp_str);
+        p->threads[i].decoded_name = strlist_add(p->decoded_name, tmp_str);
         free(tmp_str); tmp_str = NULL;
 
         /* freq */
-        get_cpu_freq(p->cores[i].id, &p->cores[i].cpukhz_min, &p->cores[i].cpukhz_max, &p->cores[i].cpukhz_cur);
-        sprintf(tmp_maxfreq, "%d", p->cores[i].cpukhz_max);
-        p->cores[i].cpukhz_max_str = strlist_add(p->cpukhz_max_str, tmp_maxfreq);
-        if (p->cores[i].cpukhz_max > p->max_khz)
-            p->max_khz = p->cores[i].cpukhz_max;
+        get_cpu_freq(p->threads[i].id, &p->threads[i].cpukhz_min, &p->threads[i].cpukhz_max, &p->threads[i].cpukhz_cur);
+        sprintf(tmp_maxfreq, "%d", p->threads[i].cpukhz_max);
+        p->threads[i].cpukhz_max_str = strlist_add(p->cpukhz_max_str, tmp_maxfreq);
+        if (p->threads[i].cpukhz_max > p->max_khz)
+            p->max_khz = p->threads[i].cpukhz_max;
     }
 
     return 1;
@@ -221,7 +247,11 @@ static char *gen_cpu_desc(x86_proc *p) {
         ret = malloc(4096);
         memset(ret, 0, 4096);
         for (i = 0; i < p->model_name->count; i++) {
-            sprintf(tmp, "%dx %s", p->model_name->strs[i].ref_count, p->model_name->strs[i].str);
+            if (p->model_name->count > 1)
+                sprintf(tmp, "%dx %s", p->model_name->strs[i].ref_count, p->model_name->strs[i].str);
+            else
+                sprintf(tmp, "%s", p->model_name->strs[i].str);
+
             sprintf(ret + l, "%s%s", (i>0) ? " + " : "", tmp);
             l += (i>0) ? strlen(tmp) + 3 : strlen(tmp);
         }
@@ -283,7 +313,7 @@ static void process_flags(x86_proc *s) {
             }
         }
     }
-    // DEBUG printf("add_unknown_flags(): added %d previously unknown flags\n", added_count);
+    //DEBUG printf("process_flags(): added %d previously unknown flags\n(%d): %s\n", added_count, (int)strlen(all_flags), all_flags );
 }
 
 x86_proc *x86_proc_new(void) {
@@ -296,6 +326,8 @@ x86_proc *x86_proc_new(void) {
         s->bug_flags = strlist_new();
         s->pm_flags = strlist_new();
         s->cpukhz_max_str = strlist_new();
+        s->core_id = strlist_new();
+        s->physical_id = strlist_new();
         s->each_flag = strlist_new();
         if (!scan_cpu(s)) {
             x86_proc_free(s);
@@ -315,6 +347,8 @@ void x86_proc_free(x86_proc *s) {
         strlist_free(s->bug_flags);
         strlist_free(s->pm_flags);
         strlist_free(s->cpukhz_max_str);
+        strlist_free(s->core_id);
+        strlist_free(s->physical_id);
         strlist_free(s->each_flag);
         fields_free(s->fields);
         free(s->cpu_desc);
@@ -348,6 +382,13 @@ int x86_proc_has_flag(x86_proc *s, const char *flag) {
     return 0;
 }
 
+int x86_proc_threads(x86_proc *s) {
+    if (s)
+        return s->thread_count;
+    else
+        return 0;
+}
+
 int x86_proc_cores(x86_proc *s) {
     if (s)
         return s->core_count;
@@ -355,47 +396,64 @@ int x86_proc_cores(x86_proc *s) {
         return 0;
 }
 
-int x86_proc_core_from_id(x86_proc *s, int id) {
+int x86_proc_count(x86_proc *s) {
+    if (s)
+        return s->proc_count;
+    else
+        return 0;
+}
+
+int x86_proc_thread_from_id(x86_proc *s, int id) {
     int i = 0;
     if (s)
-        for (i = 0; i < s->core_count; i++ )
-            if (s->cores[i].id == id)
+        for (i = 0; i < s->thread_count; i++ )
+            if (s->threads[i].id == id)
                 return i;
 
     return -1;
 }
 
-int x86_proc_core_id(x86_proc *s, int core) {
+int x86_proc_thread_id(x86_proc *s, int thread) {
     if (s)
-        if (core >= 0 && core < s->core_count)
-            return s->cores[core].id;
+        if (thread >= 0 && thread < s->thread_count)
+            return s->threads[thread].id;
 
     return 0;
 }
 
-int x86_proc_core_khz_min(x86_proc *s, int core) {
+int x86_proc_thread_khz_min(x86_proc *s, int thread) {
     if (s)
-        if (core >= 0 && core < s->core_count)
-            return s->cores[core].cpukhz_min;
+        if (thread >= 0 && thread < s->thread_count)
+            return s->threads[thread].cpukhz_min;
 
     return 0;
 }
 
-int x86_proc_core_khz_max(x86_proc *s, int core) {
+int x86_proc_thread_khz_max(x86_proc *s, int thread) {
     if (s)
-        if (core >= 0 && core < s->core_count)
-            return s->cores[core].cpukhz_max;
+        if (thread >= 0 && thread < s->thread_count)
+            return s->threads[thread].cpukhz_max;
 
     return 0;
 }
 
-int x86_proc_core_khz_cur(x86_proc *s, int core) {
+int x86_proc_thread_khz_cur(x86_proc *s, int thread) {
     if (s)
-        if (core >= 0 && core < s->core_count) {
-            get_cpu_freq(s->cores[core].id, NULL, NULL, &s->cores[core].cpukhz_cur);
-            return s->cores[core].cpukhz_cur;
+        if (thread >= 0 && thread < s->thread_count) {
+            get_cpu_freq(s->threads[thread].id, NULL, NULL, &s->threads[thread].cpukhz_cur);
+            return s->threads[thread].cpukhz_cur;
         }
     return 0;
+}
+
+static char* x86_proc_threads_str(x86_proc *s) {
+    char *buff = NULL;
+    if (s) {
+        buff = malloc(128);
+        if (buff)
+            snprintf(buff, 127, "%d", x86_proc_threads(s) );
+    }
+    return buff;
 }
 
 static char* x86_proc_cores_str(x86_proc *s) {
@@ -408,15 +466,27 @@ static char* x86_proc_cores_str(x86_proc *s) {
     return buff;
 }
 
+static char* x86_proc_count_str(x86_proc *s) {
+    char *buff = NULL;
+    if (s) {
+        buff = malloc(128);
+        if (buff)
+            snprintf(buff, 127, "%d", x86_proc_count(s) );
+    }
+    return buff;
+}
+
 #define ADDFIELD(t, l, o, n, f) fields_update_bytag(s->fields, t, l, o, n, (rpiz_fields_get_func)f, (void*)s)
 rpiz_fields *x86_proc_fields(x86_proc *s) {
     if (s) {
         if (!s->fields) {
             /* first insert creates */
             s->fields =
-            ADDFIELD("proc_name",     0, 0, "Proccesor Name", x86_proc_name );
-            ADDFIELD("proc_desc",     0, 0, "Proccesor Description", x86_proc_desc );
-            ADDFIELD("proc_count",    0, 1, "Core Count", x86_proc_cores_str );
+            ADDFIELD("proc_name",           0, 0, "Proccesor Name", x86_proc_name );
+            ADDFIELD("proc_desc",           0, 0, "Proccesor Description", x86_proc_desc );
+            ADDFIELD("proc_physical_count", 0, 1, "Count", x86_proc_count_str );
+            ADDFIELD("proc_core_count",     0, 1, "Cores", x86_proc_cores_str );
+            ADDFIELD("proc_count",          0, 1, "Threads", x86_proc_threads_str );
         }
         return s->fields;
     }

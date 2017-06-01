@@ -24,7 +24,7 @@
 #include "util.h"
 #include "cpu_arm.h"
 
-#define MAX_CORES 8
+#define MAX_CORES 128
 
 static int search_for_flag(char *flags, const char *flag) {
     char *p = strstr(flags, flag);
@@ -424,7 +424,7 @@ static void dump(arm_proc *p) {
                 p->cores[i].cpukhz_min, p->cores[i].cpukhz_max, p->cores[i].cpukhz_cur );
         }
     }
-    printf(".all_flags = %s (len: %d)\n", arm_flag_list(), strlen( arm_flag_list() ) );
+    printf(".all_flags = %s (len: %d)\n", arm_flag_list(), (int)strlen( arm_flag_list() ) );
 }
 
 int main(void) {

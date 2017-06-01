@@ -5,5 +5,5 @@ CFLAGS="-Wall -Wextra -Wmissing-prototypes -Wstrict-prototypes -Werror=implicit-
 
 cd src
 rm -f ../armcpu
-gcc $CFLAGS $@ cpu_arm.c arm_data.c util.c -DDEBUG_ARMCPU -o ../armcpu
+gcc $CFLAGS $@ cpu_arm.c arm_data.c fields.c util.c -DDEBUG_ARMCPU -o ../armcpu
 cd ..
