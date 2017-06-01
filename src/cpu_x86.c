@@ -57,6 +57,8 @@ typedef struct {
     char *bug_flags;
     char *pm_flags;
     char *cpukhz_max_str;
+
+    int bug_fdiv, bug_hlt, bug_f00f, bug_coma;
 } x86_core;
 
 struct x86_proc {
@@ -94,7 +96,7 @@ static int scan_cpu(x86_proc* p) {
     int i, di;
     char rep_pname[256] = "";
     char tmp_maxfreq[128];
-    char *tmp_dn = NULL;
+    char *tmp_str = NULL;
 
     if (!p) return 0;
 
@@ -131,6 +133,23 @@ static int scan_cpu(x86_proc* p) {
                 GET_STR("bugs", bug_flags);
                 GET_STR("power management", pm_flags);
 
+                if (CHECK_FOR("fdiv_bug") ) {
+                    if (strncmp(value, "yes", 3) == 0)
+                        p->cores[core].bug_fdiv = 1;
+                }
+                if (CHECK_FOR("hlt_bug")) {
+                    if (strncmp(value, "yes", 3) == 0)
+                        p->cores[core].bug_hlt = 1;
+                }
+                if (CHECK_FOR("f00f_bug")) {
+                    if (strncmp(value, "yes", 3) == 0)
+                        p->cores[core].bug_f00f = 1;
+                }
+                if (CHECK_FOR("coma_bug")) {
+                    if (strncmp(value, "yes", 3) == 0)
+                        p->cores[core].bug_coma = 1;
+                }
+
             }
         }
         FIN_PROC();
@@ -154,10 +173,33 @@ static int scan_cpu(x86_proc* p) {
 
     /* data not from /proc/cpuinfo */
     for (i = 0; i < p->core_count; i++) {
+         if (p->cores[i].bug_flags == NULL) {
+            /* make bugs list on old kernels that don't offer one */
+            tmp_str = malloc(128);
+            if (tmp_str) {
+                memset(tmp_str, 0, 128);
+                snprintf(tmp_str, 127, "%s%s%s%s%s%s%s%s%s%s",
+                    p->cores[i].bug_fdiv ? " fdiv" : "",
+                    p->cores[i].bug_hlt  ? " _hlt" : "",
+                    p->cores[i].bug_f00f ? " f00f" : "",
+                    p->cores[i].bug_coma ? " coma" : "",
+                    /* these bug workarounds were reported as "features" in older kernels */
+                    search_for_flag(p->cores[i].flags, "fxsave_leak")     ? " fxsave_leak" : "",
+                    search_for_flag(p->cores[i].flags, "clflush_monitor") ? " clflush_monitor" : "",
+                    search_for_flag(p->cores[i].flags, "11ap")            ? " 11ap" : "",
+                    search_for_flag(p->cores[i].flags, "tlb_mmatch")      ? " tlb_mmatch" : "",
+                    search_for_flag(p->cores[i].flags, "apic_c1e")        ? " apic_c1e" : "",
+                    ""); /* just to make adding lines easier */
+                if (strlen(tmp_str) > 0)
+                    p->cores[i].bug_flags = strlist_add(p->bug_flags, tmp_str + 1); /* skip the first space */
+                free(tmp_str); tmp_str = NULL;
+            }
+        }
+
         /* decoded names */
-        tmp_dn = strdup("(Unknown)");
-        p->cores[i].decoded_name = strlist_add(p->decoded_name, tmp_dn);
-        free(tmp_dn); tmp_dn = NULL;
+        tmp_str = strdup("(Unknown)");
+        p->cores[i].decoded_name = strlist_add(p->decoded_name, tmp_str);
+        free(tmp_str); tmp_str = NULL;
 
         /* freq */
         get_cpu_freq(p->cores[i].id, &p->cores[i].cpukhz_min, &p->cores[i].cpukhz_max, &p->cores[i].cpukhz_cur);
