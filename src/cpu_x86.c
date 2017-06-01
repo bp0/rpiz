@@ -200,35 +200,43 @@ static char *gen_cpu_desc(x86_proc *p) {
 
 #define APPEND_FLAG(f) strcat(all_flags, f); strcat(all_flags, " ");
 static void process_flags(x86_proc *s) {
-    char flag[16] = "";
+    char flag[32] = "";
     char *all_flags; /* x86_data.c: static char all_flags[1024] */
     char *cur, *next;
-    int added_count = 0, i;
+    int added_count = 0, i, si;
     if (!s) return;
 
-    all_flags = (char*)x86_flag_list();
-    for(i = 0; i < s->flags->count; i++) {
-        if (s->flags->strs[i].str) {
-            cur = s->flags->strs[i].str;
-            next = strchr(cur, ' '); if (!next) next = strchr(cur, '\0');
-            while(next) {
-                if (next-cur <= 15) {
-                    memset(flag, 0, 16);
-                    strncpy(flag, cur, next-cur);
-                    if (strlen(flag) > 0) {
-                        /* add it to the string list, copy the flag string's ref_count */
-                        strlist_add_w(s->each_flag, flag, s->flags->strs[i].ref_count);
+    cpu_string_list *sets[3] = { s->flags, s->bug_flags, s->pm_flags };
+    char *prefix[3] = { "", "bug:", "pm:" };
+    unsigned int plen = 0;
 
-                        /* add it to the list of known all flags, if it isn't there */
-                        if (!search_for_flag(all_flags, flag)) {
-                            APPEND_FLAG(flag);
-                            added_count++;
+    all_flags = (char*)x86_flag_list();
+
+    for(si = 0; si < 3; si++) {
+        plen = strlen(prefix[si]);
+        for(i = 0; i < sets[si]->count; i++) {
+            if (sets[si]->strs[i].str) {
+                cur = sets[si]->strs[i].str;
+                next = strchr(cur, ' '); if (!next) next = strchr(cur, '\0');
+                while(next) {
+                    if (next-cur <= (31 - plen) ) {
+                        memset(flag, 0, 32);
+                        snprintf(flag, plen + next - cur + 1, "%s%s", prefix[si], cur);
+                        if (strlen(flag) > plen) {
+                            /* add it to the string list, copy the flag string's ref_count */
+                            strlist_add_w(s->each_flag, flag, sets[si]->strs[i].ref_count);
+
+                            /* add it to the list of known all flags, if it isn't there */
+                            if (!search_for_flag(all_flags, flag)) {
+                                APPEND_FLAG(flag);
+                                added_count++;
+                            }
                         }
                     }
+                    if (*next == '\0') break;
+                    cur = next + 1;
+                    next = strchr(cur, ' '); if (!next) next = strchr(cur, '\0');
                 }
-                if (*next == '\0') break;
-                cur = next + 1;
-                next = strchr(cur, ' '); if (!next) next = strchr(cur, '\0');
             }
         }
     }

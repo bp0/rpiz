@@ -18,6 +18,8 @@
  *
  */
 
+#include "board.h"
+#include "cpu.h"
 #include "board_rpi.h"
 #include "cpu_arm.h"
 #pragma GCC diagnostic push
@@ -35,6 +37,8 @@ rpi_board *board;
 arm_proc *proc;
 
 static int rpiz_init(void) {
+    board_init();
+    cpu_init();
     board = rpi_board_new();
     proc = arm_proc_new();
     return 1;
@@ -43,6 +47,8 @@ static int rpiz_init(void) {
 static void rpiz_cleanup(void) {
     rpi_board_free(board);
     arm_proc_free(proc);
+    board_cleanup();
+    cpu_cleanup();
 }
 
 static gchar* rpiz_text_summary(void) {
@@ -255,6 +261,7 @@ static void update_cpufreq_list(void) {
                     -1);
 
 static void fill_flags_list(void) {
+    /*
     GtkTreeIter iter;
     gint i = 0, core_count = 0;
     gchar **all_flags;
@@ -264,6 +271,21 @@ static void fill_flags_list(void) {
             core_count = arm_proc_has_flag(proc, all_flags[i]);
             if (core_count) {
                 FLAGS_ADD(all_flags[i], core_count, arm_flag_meaning(all_flags[i]) );
+            }
+        }
+        i++;
+    }
+    g_strfreev(all_flags);
+    */
+    GtkTreeIter iter;
+    gint i = 0, core_count = 0;
+    gchar **all_flags;
+    all_flags = g_strsplit(cpu_all_flags(), " ", 0);
+    while(all_flags[i] != NULL) {
+        if (g_strcmp0(all_flags[i], "") != 0) {
+            core_count = cpu_has_flag(all_flags[i]);
+            if (core_count) {
+                FLAGS_ADD(all_flags[i], core_count, cpu_flag_meaning(all_flags[i]) );
             }
         }
         i++;
