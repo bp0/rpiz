@@ -201,14 +201,14 @@ static char *gen_cpu_desc(x86_proc *p) {
 #define APPEND_FLAG(f) strcat(all_flags, f); strcat(all_flags, " ");
 static void process_flags(x86_proc *s) {
     char flag[32] = "";
-    char *all_flags; /* x86_data.c: static char all_flags[1024] */
+    char *all_flags; /* x86_data.c: static char all_flags[4096] */
     char *cur, *next;
     int added_count = 0, i, si;
     if (!s) return;
 
     cpu_string_list *sets[3] = { s->flags, s->bug_flags, s->pm_flags };
     char *prefix[3] = { "", "bug:", "pm:" };
-    unsigned int plen = 0;
+    int plen = 0, flen = 0;
 
     all_flags = (char*)x86_flag_list();
 
@@ -219,10 +219,11 @@ static void process_flags(x86_proc *s) {
                 cur = sets[si]->strs[i].str;
                 next = strchr(cur, ' '); if (!next) next = strchr(cur, '\0');
                 while(next) {
-                    if (next-cur <= (31 - plen) ) {
+                    flen = next-cur;
+                    if (flen <= (31 - plen) ) {
                         memset(flag, 0, 32);
-                        snprintf(flag, plen + next - cur + 1, "%s%s", prefix[si], cur);
-                        if (strlen(flag) > plen) {
+                        snprintf(flag, plen + flen + 1, "%s%s", prefix[si], cur);
+                        if (strlen(flag) > (unsigned int)plen) {
                             /* add it to the string list, copy the flag string's ref_count */
                             strlist_add_w(s->each_flag, flag, sets[si]->strs[i].ref_count);
 
