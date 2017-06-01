@@ -86,6 +86,17 @@ int get_cpu_int(const char* item, int cpuid) {
     return ret;
 }
 
+int get_cpu_freq(int id, int *min, int *max, int *cur) {
+    int ret = 0;
+    if (min)
+        ret += *min = get_cpu_int("cpufreq/scaling_min_freq", id);
+    if (max)
+        ret += *max = get_cpu_int("cpufreq/scaling_max_freq", id);
+    if (cur)
+        ret += *cur = get_cpu_int("cpufreq/scaling_cur_freq", id);
+    return !!ret;
+}
+
 cpu_string_list *strlist_new(void) {
     cpu_string_list *list = malloc( sizeof(cpu_string_list) );
     list->count = 0;

@@ -24,8 +24,9 @@
 char *get_file_contents(const char *file);
 int dir_exists(const char* path);
 
-/* get int from /sys/devices/system/cpu/cpu<cpuid>/<item> */
+/* -- /sys/devices/system/cpu/.. -- */
 int get_cpu_int(const char* item, int cpuid);
+int get_cpu_freq(int id, int *min, int *max, int *cur);
 
 /* -- string structures used in cpu_*  -- */
 

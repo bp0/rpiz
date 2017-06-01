@@ -183,9 +183,7 @@ static int scan_cpu(arm_proc* p) {
         free(tmp_dn); tmp_dn = NULL;
 
         /* freq */
-        p->cores[i].cpukhz_cur = get_cpu_int("cpufreq/scaling_cur_freq", p->cores[i].id);
-        p->cores[i].cpukhz_min = get_cpu_int("cpufreq/scaling_min_freq", p->cores[i].id);
-        p->cores[i].cpukhz_max = get_cpu_int("cpufreq/scaling_max_freq", p->cores[i].id);
+        get_cpu_freq(p->cores[i].id, &p->cores[i].cpukhz_min, &p->cores[i].cpukhz_max, &p->cores[i].cpukhz_cur);
         sprintf(tmp_maxfreq, "%d", p->cores[i].cpukhz_max);
         p->cores[i].cpukhz_max_str = strlist_add(p->cpukhz_max_str, tmp_maxfreq);
         if (p->cores[i].cpukhz_max > p->max_khz)
@@ -372,7 +370,7 @@ int arm_proc_core_khz_max(arm_proc *s, int core) {
 int arm_proc_core_khz_cur(arm_proc *s, int core) {
     if (s)
         if (core >= 0 && core < s->core_count) {
-            s->cores[core].cpukhz_cur = get_cpu_int("cpufreq/scaling_cur_freq", s->cores[core].id);
+            get_cpu_freq(s->cores[core].id, NULL, NULL, &s->cores[core].cpukhz_cur);
             return s->cores[core].cpukhz_cur;
         }
     return 0;
