@@ -1,10 +1,10 @@
 # rpiz
-A CPU-Z-like thing for Raspberry Pi.
+A CPU-Z-like thing for Raspberry Pi and perhaps other SBCs.
 
 Build
 -----
 Requires GTK+ 2. Install Debian's libgtk2.0-dev package or equivalent.
-> sh build.sh
+> make all
 
 Run
 ---
