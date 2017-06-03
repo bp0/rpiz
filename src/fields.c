@@ -42,11 +42,35 @@ rpiz_fields *fields_new() {
     return s;
 }
 
+int fields_tag_has_prefix(rpiz_fields *s, const char *prefix) {
+    int tl = 0, pl = 0;
+    if (s && prefix) {
+        pl = strlen(prefix);
+        if (s->tag)
+            tl = strlen(s->tag);
+        if (tl && tl >= pl)
+            if (strncmp(s->tag, prefix, pl) == 0)
+                return 1;
+    }
+    return 0;
+}
+
 rpiz_fields *fields_next(rpiz_fields *s) {
     if (s)
         return s->next;
     else
         return NULL;
+}
+
+rpiz_fields *fields_next_with_tag_prefix(rpiz_fields *s, const char *prefix) {
+    if (s)
+        s = s->next;
+    while(s) {
+        if ( fields_tag_has_prefix(s, prefix) )
+            return s;
+        s = s->next;
+    }
+    return NULL;
 }
 
 static void fields_update(rpiz_fields *s, int live_update, int own_value, char *name, rpiz_fields_get_func get_func, void *data) {

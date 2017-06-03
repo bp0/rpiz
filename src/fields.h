@@ -27,6 +27,10 @@ typedef char* (*rpiz_fields_get_func)(void *data);
 
 rpiz_fields *fields_new(void);
 rpiz_fields *fields_next(rpiz_fields *);
+
+int fields_tag_has_prefix(rpiz_fields *s, const char *prefix);
+rpiz_fields *fields_next_with_tag_prefix(rpiz_fields *, const char *prefix);
+
 rpiz_fields *fields_update_bytag(rpiz_fields *, char *tag, int live_update, int own_value, char *name, rpiz_fields_get_func get_func, void *data);
 int fields_islive(rpiz_fields *, char *tag);
 int fields_get(rpiz_fields *, char **tag, char **name, char **value);

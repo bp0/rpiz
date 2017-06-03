@@ -392,9 +392,10 @@ rpiz_fields *arm_proc_fields(arm_proc *s) {
         if (!s->fields) {
             /* first insert creates */
             s->fields =
-            ADDFIELD("proc_name",     0, 0, "Proccesor Name", arm_proc_name );
-            ADDFIELD("proc_desc",     0, 0, "Proccesor Description", arm_proc_desc );
-            ADDFIELD("proc_count",    0, 1, "Core Count", arm_proc_cores_str );
+            ADDFIELD("summary.proc_desc", 0, 0, "Proccesor", arm_proc_desc );
+            ADDFIELD("cpu.name",          0, 0, "Proccesor Name", arm_proc_name );
+            ADDFIELD("cpu.desc",          0, 0, "Proccesor Description", arm_proc_desc );
+            ADDFIELD("cpu.count",         0, 1, "Core Count", arm_proc_cores_str );
         }
         return s->fields;
     }

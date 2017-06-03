@@ -95,8 +95,9 @@ rpiz_fields *dt_board_fields(dt_board *s) {
         if (!s->fields) {
             /* first insert creates */
             s->fields =
-            ADDFIELD("board_name",    0, 0, "Board Name", dt_board_desc );
-            ADDFIELD("board_serial",  0, 0, "Serial Number", dt_board_serial );
+            ADDFIELD("summary.board_name", 0, 0, "Board Name", dt_board_desc );
+            ADDFIELD("board.dt_model",     0, 0, "Board Model", dt_board_desc );
+            ADDFIELD("board.dt_serial",    0, 0, "Serial Number", dt_board_serial );
         }
         return s->fields;
     }

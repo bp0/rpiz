@@ -85,13 +85,27 @@ const char *dmi_board_desc(dmi_board *s) {
     return NULL;
 }
 
+const char *dmi_board_model(dmi_board *s) {
+    if (s)
+        return s->board_model;
+    return NULL;
+}
+
+const char *dmi_board_vendor(dmi_board *s) {
+    if (s)
+        return s->board_vendor;
+    return NULL;
+}
+
 #define ADDFIELD(t, l, o, n, f) fields_update_bytag(s->fields, t, l, o, n, (rpiz_fields_get_func)f, (void*)s)
 rpiz_fields *dmi_board_fields(dmi_board *s) {
     if (s) {
         if (!s->fields) {
             /* first insert creates */
             s->fields =
-            ADDFIELD("board_name",    0, 0, "Board Name", dmi_board_desc );
+            ADDFIELD("summary.board_name", 0, 0, "Board Name", dmi_board_desc );
+            ADDFIELD("board.dmi_model",    0, 0, "Board Model", dmi_board_model );
+            ADDFIELD("board.dmi_vendor",   0, 0, "Board Vendor", dmi_board_vendor );
         }
         return s->fields;
     }

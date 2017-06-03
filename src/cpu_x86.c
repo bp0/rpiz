@@ -26,6 +26,8 @@
 
 #define MAX_THREADS 128
 
+static const char unk[] = "";
+
 static int search_for_flag(char *flags, const char *flag) {
     char *p = strstr(flags, flag);
     int l = strlen(flag);
@@ -76,7 +78,7 @@ struct x86_proc {
 
     cpu_string_list *each_flag;
 
-    char cpu_name[256];
+    char *cpu_name; /* do not free */
     char *cpu_desc;
     int max_khz;
 
@@ -334,6 +336,10 @@ x86_proc *x86_proc_new(void) {
             return NULL;
         }
         s->cpu_desc = gen_cpu_desc(s);
+        if (s->model_name->count == 1)
+            s->cpu_name = s->model_name->strs[0].str;
+        else
+            s->cpu_name = (char *)unk;
         process_flags(s);
     }
     return s;
@@ -482,11 +488,12 @@ rpiz_fields *x86_proc_fields(x86_proc *s) {
         if (!s->fields) {
             /* first insert creates */
             s->fields =
-            ADDFIELD("proc_name",           0, 0, "Proccesor Name", x86_proc_name );
-            ADDFIELD("proc_desc",           0, 0, "Proccesor Description", x86_proc_desc );
-            ADDFIELD("proc_physical_count", 0, 1, "Count", x86_proc_count_str );
-            ADDFIELD("proc_core_count",     0, 1, "Cores", x86_proc_cores_str );
-            ADDFIELD("proc_count",          0, 1, "Threads", x86_proc_threads_str );
+            ADDFIELD("summary.proc_desc",  0, 0, "Proccesor", x86_proc_desc );
+            ADDFIELD("cpu.name",           0, 0, "Proccesor Name", x86_proc_name );
+            ADDFIELD("cpu.desc",           0, 0, "Proccesor Description", x86_proc_desc );
+            ADDFIELD("cpu.physical_count", 0, 1, "Count", x86_proc_count_str );
+            ADDFIELD("cpu.core_count",     0, 1, "Cores", x86_proc_cores_str );
+            ADDFIELD("cpu.count",          0, 1, "Threads", x86_proc_threads_str );
         }
         return s->fields;
     }

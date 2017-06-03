@@ -309,13 +309,15 @@ rpiz_fields *rpi_board_fields(rpi_board *s) {
         if (!s->fields) {
             /* first insert creates */
             s->fields =
-            ADDFIELD("board_name",    0, 0, "Board Name", rpi_board_desc );
-            ADDFIELD("rpi_intro",     0, 0, "Introduction", rpi_board_intro );
-            ADDFIELD("rpi_mfgby",     0, 0, "Manufacturer", rpi_board_mfgby );
-            ADDFIELD("rpi_rcode",     0, 0, "RCode", rpi_board_rcode );
-            ADDFIELD("board_serial",  0, 0, "Serial Number", rpi_board_serial );
-            ADDFIELD("rpi_overvolt",  0, 1, "Overvolt", rpi_board_overvolt_str );
-            ADDFIELD("rpi_temp",      1, 1, "SOC Temp",   rpi_soc_temp_str );
+            ADDFIELD("summary.board_name",  0, 0, "Board Name", rpi_board_desc );
+            ADDFIELD("summary.rpi_temp",    1, 1, "SOC Temp",   rpi_soc_temp_str );
+            ADDFIELD("board.rpi_name",      0, 0, "Model", rpi_board_desc );
+            ADDFIELD("board.rpi_intro",     0, 0, "Introduction", rpi_board_intro );
+            ADDFIELD("board.rpi_mfgby",     0, 0, "Manufacturer", rpi_board_mfgby );
+            ADDFIELD("board.rpi_rcode",     0, 0, "RCode", rpi_board_rcode );
+            ADDFIELD("board.rpi_serial",    0, 0, "Serial Number", rpi_board_serial );
+            ADDFIELD("board.rpi_overvolt",  0, 1, "Overvolt", rpi_board_overvolt_str );
+            ADDFIELD("board.rpi_temp",      1, 1, "SOC Temp",   rpi_soc_temp_str );
         }
         return s->fields;
     }

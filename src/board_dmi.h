@@ -31,6 +31,8 @@ dmi_board *dmi_board_new(void);
 void dmi_board_free(dmi_board *);
 
 const char *dmi_board_desc(dmi_board *);
+const char *dmi_board_model(dmi_board *);
+const char *dmi_board_vendor(dmi_board *);
 
 rpiz_fields *dmi_board_fields(dmi_board *);
 
