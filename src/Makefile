@@ -3,10 +3,10 @@ CFLAGS = -O2 -Wall -Wextra -Wmissing-prototypes -Wstrict-prototypes -Werror=impl
 
 objects = util.o fields.o arm_data.o cpu_arm.o x86_data.o cpu_x86.o cpu.o board_dt.o board_dmi.o board_rpi.o board.o
 
-rpiz-cli : $(objects)
+rpiz-cli : rpiz-cli.c $(objects)
 	cc -o rpiz-cli rpiz-cli.c $(objects)
 
-rpiz-gtk : $(objects)
+rpiz-gtk : rpiz-gtk.c $(objects)
 	cc -o rpiz-gtk rpiz-gtk.c $(objects) `pkg-config --cflags --libs gtk+-2.0`
 
 util.o : util.h
