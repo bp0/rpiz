@@ -24,15 +24,6 @@
 #include "board.h"
 #include "cpu.h"
 
-static void dump_fields(rpiz_fields *f) {
-    char *t, *n, *v;
-    while (f) {
-        fields_get(f, &t, &n, &v);
-        printf("[%s] %s = %s\n", t, n, v);
-        f = fields_next(f);
-    }
-}
-
 int main(void) {
     rpiz_fields *bf, *pf;
 
@@ -40,9 +31,9 @@ int main(void) {
     cpu_init();
 
     bf = board_fields();
-    dump_fields(bf);
+    fields_dump(bf);
     pf = cpu_fields();
-    dump_fields(pf);
+    fields_dump(pf);
 
     board_cleanup();
     cpu_cleanup();

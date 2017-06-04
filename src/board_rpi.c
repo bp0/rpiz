@@ -314,6 +314,8 @@ rpiz_fields *rpi_board_fields(rpi_board *s) {
             ADDFIELD("board.rpi_name",      0, 0, "Model", rpi_board_desc );
             ADDFIELD("board.rpi_intro",     0, 0, "Introduction", rpi_board_intro );
             ADDFIELD("board.rpi_mfgby",     0, 0, "Manufacturer", rpi_board_mfgby );
+            ADDFIELD("board.rpi_mem_spec",  0, 0, "Memory (spec)", rpi_board_mem_spec );
+            ADDFIELD("board.rpi_soc_spec",  0, 0, "SOC (spec)", rpi_board_soc );
             ADDFIELD("board.rpi_rcode",     0, 0, "RCode", rpi_board_rcode );
             ADDFIELD("board.rpi_serial",    0, 0, "Serial Number", rpi_board_serial );
             ADDFIELD("board.rpi_overvolt",  0, 1, "Overvolt", rpi_board_overvolt_str );

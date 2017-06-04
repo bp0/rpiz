@@ -54,16 +54,6 @@ static void rpiz_cleanup(void) {
     cpu_cleanup();
 }
 
-static gchar* rpiz_text_summary(void) {
-    char *t, *n, *v;
-    rpiz_fields *f = all_fields;
-    while (f) {
-        fields_get(f, &t, &n, &v);
-        printf("[%s] %s = %s\n", t, n, v);
-        f = fields_next(f);
-    }
-}
-
 struct {
     gint timeout_id;
     gint interval_ms;
@@ -370,10 +360,7 @@ int main( int   argc,
     fill_flags_list();
 
     /* dump data to console */
-    gchar *summary_text;
-    summary_text = rpiz_text_summary();
-    printf("%s", summary_text);
-    g_free(summary_text);
+    fields_dump(all_fields);
 
     GtkTextBuffer *about_text_buffer = gtk_text_buffer_new (NULL);
     gtk_text_buffer_set_text (about_text_buffer, about_text, -1);
