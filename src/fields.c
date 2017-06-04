@@ -42,6 +42,55 @@ rpiz_fields *fields_new() {
     return s;
 }
 
+void fields_free(rpiz_fields *s) {
+    if (s) {
+        if (s->next != NULL)
+            fields_free(s->next);
+        free(s->tag);
+        free(s->name);
+        if (s->own_value)
+            free(s->value);
+        free(s);
+    }
+}
+
+rpiz_fields *fields_copy(rpiz_fields *src, rpiz_fields *append_src) {
+    rpiz_fields *dest = NULL, *prev = NULL, *cpd = NULL;
+    while (src) {
+        cpd = malloc(sizeof(rpiz_fields));
+        if (!cpd) {
+            fields_free(dest);
+            return NULL;
+        }
+        memset(cpd, 0, sizeof(*cpd));
+        if (!dest)
+            dest = cpd;
+        if (prev)
+            prev->next = cpd;
+
+        cpd->own_value = src->own_value;
+        cpd->live = src->live;
+        cpd->get_func = src->get_func;
+        cpd->data = src->data;
+        cpd->tag = strdup(src->tag);
+        cpd->name = strdup(src->name);
+        if (cpd->own_value)
+            cpd->value = strdup(src->value);
+        else
+            cpd->value = src->value;
+
+        prev = cpd;
+        src = src->next;
+        if (!src && append_src) {
+            /* append another fields list if given */
+            src = append_src;
+            append_src = NULL;
+        }
+    }
+    return dest;
+}
+
+
 int fields_tag_has_prefix(rpiz_fields *s, const char *prefix) {
     int tl = 0, pl = 0;
     if (s && prefix) {
@@ -137,7 +186,7 @@ int fields_get(rpiz_fields *s, char **tag, char **name, char **value) {
         if (name) *name = s->name;
         if (s->get_func) {
             tmp = s->get_func(s->data);
-            if (s->value)
+            if (s->value && s->own_value)
                 free(s->value);
             if (tmp) {
                 if (s->own_value)
@@ -167,13 +216,12 @@ int fields_get_bytag(rpiz_fields *s, char *tag, char **name, char **value) {
     return 0;
 }
 
-void fields_free(rpiz_fields *s) {
-    if (s) {
-        if (s->next != NULL)
-            fields_free(s->next);
-        free(s->tag);
-        free(s->name);
-        free(s->value);
-        free(s);
+void fields_dump(rpiz_fields *s) {
+    char *t, *n, *v;
+    rpiz_fields *f = s;
+    while (f) {
+        fields_get(f, &t, &n, &v);
+        printf("[%s] %s = %s\n", t, n, v);
+        f = fields_next(f);
     }
 }

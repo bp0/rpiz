@@ -26,9 +26,10 @@ typedef struct rpiz_fields rpiz_fields;
 typedef char* (*rpiz_fields_get_func)(void *data);
 
 rpiz_fields *fields_new(void);
+rpiz_fields *fields_copy(rpiz_fields *src, rpiz_fields *append_src);
 rpiz_fields *fields_next(rpiz_fields *);
 
-int fields_tag_has_prefix(rpiz_fields *s, const char *prefix);
+int fields_tag_has_prefix(rpiz_fields *, const char *prefix);
 rpiz_fields *fields_next_with_tag_prefix(rpiz_fields *, const char *prefix);
 
 rpiz_fields *fields_update_bytag(rpiz_fields *, char *tag, int live_update, int own_value, char *name, rpiz_fields_get_func get_func, void *data);
@@ -36,5 +37,7 @@ int fields_islive(rpiz_fields *, char *tag);
 int fields_get(rpiz_fields *, char **tag, char **name, char **value);
 int fields_get_bytag(rpiz_fields *, char *tag, char **name, char **value);
 void fields_free(rpiz_fields *);
+
+void fields_dump(rpiz_fields *);
 
 #endif
