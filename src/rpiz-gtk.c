@@ -177,6 +177,7 @@ static void kv_view_update(GtkListStore *store) {
         gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, KV_COL_LIVE, &live, -1);
         if (live) {
             gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, KV_COL_TAG, &tag, -1);
+            fields_get_bytag(all_fields, tag, NULL, &value);
             gtk_list_store_set(store, &iter, KV_COL_VALUE, value, -1);
         }
 
