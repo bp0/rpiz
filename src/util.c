@@ -24,42 +24,53 @@
 #include <dirent.h>
 #include "util.h"
 
+#define GFC_PAGE_SIZE 4096
 char *get_file_contents(const char *file) {
     FILE *fh;
-    char *buff = NULL;
+    char *buff = NULL, *tmp = NULL;
     char *loc = NULL;
     int rlen = 0;
-    int pages = 1;
-    int fs = 0;
+    unsigned int pages = 1;
+    unsigned int fs = 0;
 
     fh = fopen(file, "r");
     if (!fh)
         return NULL;
 
-    buff = malloc(pages * 1024 + 1);
+    buff = malloc( pages * GFC_PAGE_SIZE + 1 );
     if (buff == NULL) {
         fclose(fh);
         return NULL;
     }
 
     loc = buff;
-    while((rlen = fread(loc, 1, 1024, fh))) {
+    while((rlen = fread(loc, 1, GFC_PAGE_SIZE, fh))) {
         fs += rlen;
-        if (rlen == 1024) {
+        if (rlen == GFC_PAGE_SIZE) {
             pages++;
-            buff = realloc(buff, pages * 1024 + 1);
-            if (buff == NULL) {
+            tmp = realloc(buff, pages * GFC_PAGE_SIZE + 1 );
+            if (tmp == NULL) {
+                free(buff);
                 fclose(fh);
                 return NULL;
             }
-            loc = buff + ((pages-1) * 1024);
+            buff = tmp;
+            loc = buff + ((pages-1) * GFC_PAGE_SIZE);
         } else
             break;
     }
     fclose(fh);
-    buff[fs+1] = '\0';
 
-    //DEBUG printf("get_file_contents( %s ): fs: %d, pages: %d\n", file, fs, pages);
+    tmp = malloc(fs + 4);
+    if (tmp) {
+        memset(tmp, 0, fs + 4);
+        strncpy(tmp, buff, fs);
+        free(buff);
+        buff = tmp;
+    } else
+        buff[fs+1] = 0;
+
+    //DEBUG printf("get_file_contents( %s ): slen: %u, fs: %u, bs: %u, pages: %u, page_size: %u\n", file, (unsigned int)strlen(buff), fs, (pages * GFC_PAGE_SIZE + 1) , pages, GFC_PAGE_SIZE);
 
     return buff;
 }
@@ -115,6 +126,7 @@ void strlist_free(cpu_string_list *list) {
 
 char *strlist_add_w(cpu_string_list *list, const char* str, int weight) {
     int i;
+    cpu_string *tmp;
     for (i = 0; i < list->count; i++) {
         if (strcmp(list->strs[i].str, str) == 0) {
             /* found */
@@ -127,11 +139,17 @@ char *strlist_add_w(cpu_string_list *list, const char* str, int weight) {
 
     if (list->strs == NULL)
         list->strs = malloc(sizeof(cpu_string));
-    else
-        list->strs = realloc(list->strs, sizeof(cpu_string) * list->count);
+    else {
+        tmp = realloc(list->strs, sizeof(cpu_string) * list->count);
+        if (tmp)
+            list->strs = tmp;
+        else
+            return NULL;
+    }
 
     list->strs[i].str = malloc(strlen(str) + 1);
-    strcpy(list->strs[i].str, str);
+    if (list->strs[i].str != NULL)
+        strcpy(list->strs[i].str, str);
     list->strs[i].ref_count = weight;
     return list->strs[i].str;
 }

@@ -33,6 +33,11 @@ void dmi_board_free(dmi_board *);
 const char *dmi_board_desc(dmi_board *);
 const char *dmi_board_model(dmi_board *);
 const char *dmi_board_vendor(dmi_board *);
+const char *dmi_board_version(dmi_board *);
+const char *dmi_board_serial(dmi_board *);
+const char *dmi_board_bios_vendor(dmi_board *);
+const char *dmi_board_bios_version(dmi_board *);
+const char *dmi_board_bios_date(dmi_board *);
 
 rpiz_fields *dmi_board_fields(dmi_board *);
 
