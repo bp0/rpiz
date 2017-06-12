@@ -402,7 +402,7 @@ rpiz_fields *arm_proc_fields(arm_proc *s) {
 
             for(i = 0; i < s->core_count; i++) {
                 sprintf(bt, "cpu.thread[%d].model_name", i);
-                sprintf(bn, "[%d] model name", s->cores[i].id);
+                sprintf(bn, "[%d] linux name", s->cores[i].id);
                 sprintf(bv, "%s", s->cores[i].model_name);
                 bvp = strdup(bv); ADDFIELDSTR(bt, 0, 1, bn, bvp);
 
