@@ -389,6 +389,8 @@ static char* arm_proc_cores_str(arm_proc *s) {
 #define ADDFIELD(t, l, o, n, f) fields_update_bytag(s->fields, t, l, o, n, (rpiz_fields_get_func)f, (void*)s)
 #define ADDFIELDSTR(t, l, o, n, str) fields_update_bytag(s->fields, t, l, o, n, NULL, (void*)str)
 rpiz_fields *arm_proc_fields(arm_proc *s) {
+    int i;
+    char bn[256] = "", bt[256] = "", bv[256] = "", *bvp;
     if (s) {
         if (!s->fields) {
             /* first insert creates */
@@ -397,6 +399,44 @@ rpiz_fields *arm_proc_fields(arm_proc *s) {
             ADDFIELD("cpu.name",          0, 0, "Proccesor Name", arm_proc_name );
             ADDFIELD("cpu.desc",          0, 0, "Proccesor Description", arm_proc_desc );
             ADDFIELD("cpu.count",         0, 1, "Core Count", arm_proc_cores_str );
+
+            for(i = 0; i < s->core_count; i++) {
+                sprintf(bt, "cpu.thread[%d].model_name", i);
+                sprintf(bn, "[%d] model name", s->cores[i].id);
+                sprintf(bv, "%s", s->cores[i].model_name);
+                bvp = strdup(bv); ADDFIELDSTR(bt, 0, 1, bn, bvp);
+
+                sprintf(bt, "cpu.thread[%d].decoded_name", i);
+                sprintf(bn, "[%d] decoded name", s->cores[i].id);
+                sprintf(bv, "%s", s->cores[i].decoded_name);
+                bvp = strdup(bv); ADDFIELDSTR(bt, 0, 1, bn, bvp);
+
+                sprintf(bt, "cpu.thread[%d].cpu_implementer", i);
+                sprintf(bn, "[%d] implementer", s->cores[i].id);
+                sprintf(bv, "[%s] %s", s->cores[i].cpu_implementer, arm_implementer(s->cores[i].cpu_implementer) );
+                bvp = strdup(bv); ADDFIELDSTR(bt, 0, 1, bn, bvp);
+
+                sprintf(bt, "cpu.thread[%d].cpu_architecture", i);
+                sprintf(bn, "[%d] architecture", s->cores[i].id);
+                sprintf(bv, "[%s] %s", s->cores[i].cpu_architecture, arm_arch_more(s->cores[i].cpu_architecture) );
+                bvp = strdup(bv); ADDFIELDSTR(bt, 0, 1, bn, bvp);
+
+                sprintf(bt, "cpu.thread[%d].cpu_part", i);
+                sprintf(bn, "[%d] part", s->cores[i].id);
+                sprintf(bv, "[%s] %s", s->cores[i].cpu_part, arm_part(s->cores[i].cpu_implementer, s->cores[i].cpu_part) );
+                bvp = strdup(bv); ADDFIELDSTR(bt, 0, 1, bn, bvp);
+
+                sprintf(bt, "cpu.thread[%d].cpu_variant", i);
+                sprintf(bn, "[%d] variant", s->cores[i].id);
+                sprintf(bv, "%s", s->cores[i].cpu_variant );
+                bvp = strdup(bv); ADDFIELDSTR(bt, 0, 1, bn, bvp);
+
+                sprintf(bt, "cpu.thread[%d].cpu_revision", i);
+                sprintf(bn, "[%d] revision", s->cores[i].id);
+                sprintf(bv, "%s", s->cores[i].cpu_revision );
+                bvp = strdup(bv); ADDFIELDSTR(bt, 0, 1, bn, bvp);
+            }
+
         }
         return s->fields;
     }
@@ -418,7 +458,7 @@ static void dump(arm_proc *p) {
             printf(".proc.core[%d].decoded_name = %s\n", i, p->cores[i].decoded_name);
             printf(".proc.core[%d].flags = %s\n", i, p->cores[i].flags);
             printf(".proc.core[%d].cpu_implementer = [%s] %s\n", i, p->cores[i].cpu_implementer, arm_implementer(p->cores[i].cpu_implementer) );
-            printf(".proc.core[%d].cpu_architecture = %s\n", i, p->cores[i].cpu_architecture);
+            printf(".proc.core[%d].cpu_architecture = [%s] %s\n", i, p->cores[i].cpu_architecture, arm_arch_more(p->cores[i].cpu_architecture) );
             printf(".proc.core[%d].cpu_variant = %s\n", i, p->cores[i].cpu_variant);
             printf(".proc.core[%d].cpu_part = [%s] %s\n", i, p->cores[i].cpu_part, arm_part(p->cores[i].cpu_implementer, p->cores[i].cpu_part) );
             printf(".proc.core[%d].cpu_revision = %s\n", i, p->cores[i].cpu_revision);
