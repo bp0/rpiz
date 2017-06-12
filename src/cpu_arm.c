@@ -387,6 +387,7 @@ static char* arm_proc_cores_str(arm_proc *s) {
 }
 
 #define ADDFIELD(t, l, o, n, f) fields_update_bytag(s->fields, t, l, o, n, (rpiz_fields_get_func)f, (void*)s)
+#define ADDFIELDSTR(t, l, o, n, str) fields_update_bytag(s->fields, t, l, o, n, NULL, (void*)str)
 rpiz_fields *arm_proc_fields(arm_proc *s) {
     if (s) {
         if (!s->fields) {

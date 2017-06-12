@@ -483,6 +483,7 @@ static char* x86_proc_count_str(x86_proc *s) {
 }
 
 #define ADDFIELD(t, l, o, n, f) fields_update_bytag(s->fields, t, l, o, n, (rpiz_fields_get_func)f, (void*)s)
+#define ADDFIELDSTR(t, l, o, n, str) fields_update_bytag(s->fields, t, l, o, n, NULL, (void*)str)
 rpiz_fields *x86_proc_fields(x86_proc *s) {
     if (s) {
         if (!s->fields) {

@@ -132,7 +132,10 @@ static void fields_update(rpiz_fields *s, int live_update, int own_value, char *
         s->own_value = own_value;
         s->get_func = get_func;
         s->data = data;
-        fields_get(s, NULL, NULL, NULL);
+        if (s->get_func != NULL)
+            fields_get(s, NULL, NULL, NULL);
+        else
+            s->value = (char*)data;
     }
 }
 
