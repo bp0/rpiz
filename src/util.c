@@ -84,12 +84,16 @@ int dir_exists(const char* path) {
         return 0;
 }
 
-int get_cpu_int(const char* item, int cpuid) {
+char *get_cpu_str(const char* item, int cpuid) {
     char fn[256];
+    snprintf(fn, 256, "/sys/devices/system/cpu/cpu%d/%s", cpuid, item);
+    return get_file_contents(fn);
+}
+
+int get_cpu_int(const char* item, int cpuid) {
     char *fc = NULL;
     int ret = 0;
-    snprintf(fn, 256, "/sys/devices/system/cpu/cpu%d/%s", cpuid, item);
-    fc = get_file_contents(fn);
+    fc = get_cpu_str(item, cpuid);
     if (fc) {
         ret = atol(fc);
         free(fc);
