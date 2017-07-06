@@ -49,6 +49,9 @@ typedef struct {
     int id;
     int cpukhz_min, cpukhz_max, cpukhz_cur;
 
+    unsigned long long reg_midr_el1;
+    unsigned long long reg_revidr_el1;
+
     /* point to a cpu_string.str */
     char *model_name;
     char *flags;
@@ -98,8 +101,9 @@ static int scan_cpu(arm_proc* p) {
     int core = -1;
     int i, di;
     char rep_pname[256] = "";
-    char tmp_maxfreq[128];
+    char tmp_maxfreq[128] = "";
     char *tmp_dn = NULL;
+    char *tmp_reg = NULL;
 
     if (!p) return 0;
 
@@ -174,6 +178,14 @@ static int scan_cpu(arm_proc* p) {
 
     /* data not from /proc/cpuinfo */
     for (i = 0; i < p->core_count; i++) {
+        /* id registers (aarch64) */
+        tmp_reg = get_cpu_str("regs/identification/midr_el1", p->cores[i].id);
+        if (tmp_reg) p->cores[i].reg_midr_el1 = strtoll(tmp_reg, NULL, 0);
+        free(tmp_reg);
+        tmp_reg = get_cpu_str("regs/identification/revidr_el1", p->cores[i].id);
+        if (tmp_reg) p->cores[i].reg_revidr_el1 = strtoll(tmp_reg, NULL, 0);
+        free(tmp_reg);
+
         /* decoded names */
         tmp_dn = arm_decoded_name(
                 p->cores[i].cpu_implementer, p->cores[i].cpu_part,
@@ -435,6 +447,17 @@ rpiz_fields *arm_proc_fields(arm_proc *s) {
                 sprintf(bn, "[%d] revision", s->cores[i].id);
                 sprintf(bv, "%s", s->cores[i].cpu_revision );
                 bvp = strdup(bv); ADDFIELDSTR(bt, 0, 1, bn, bvp);
+
+                sprintf(bt, "cpu.thread[%d].reg_midr_el1", i);
+                sprintf(bn, "[%d] reg_midr_el1", s->cores[i].id);
+                sprintf(bv, "0x%016llx", s->cores[i].reg_midr_el1 );
+                bvp = strdup(bv); ADDFIELDSTR(bt, 0, 1, bn, bvp);
+
+                sprintf(bt, "cpu.thread[%d].reg_revidr_el1", i);
+                sprintf(bn, "[%d] reg_revidr_el1", s->cores[i].id);
+                sprintf(bv, "0x%016llx", s->cores[i].reg_revidr_el1 );
+                bvp = strdup(bv); ADDFIELDSTR(bt, 0, 1, bn, bvp);
+
             }
 
         }
@@ -464,6 +487,8 @@ static void dump(arm_proc *p) {
             printf(".proc.core[%d].cpu_revision = %s\n", i, p->cores[i].cpu_revision);
             printf(".proc.core[%d].freq_khz(min - max / cur) = %d - %d / %d\n", i,
                 p->cores[i].cpukhz_min, p->cores[i].cpukhz_max, p->cores[i].cpukhz_cur );
+            printf(".proc.core[%d].reg_midr_el1 = 0x%016llx\n", i, p->cores[i].reg_midr_el1);
+            printf(".proc.core[%d].reg_revidr_el1 = 0x%016llx\n", i, p->cores[i].reg_revidr_el1);
         }
     }
     printf(".all_flags = %s (len: %d)\n", arm_flag_list(), (int)strlen( arm_flag_list() ) );
