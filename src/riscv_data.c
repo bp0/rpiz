@@ -24,27 +24,34 @@
 #include <ctype.h>
 #include "riscv_data.h"
 
+#ifndef _
+#define _(String) String
+#endif
+#ifndef N_
+#define N_(String) String
+#endif
+
 static struct {
     char *name, *meaning;
 } tab_ext_meaning[] = {
-    { "RV32",	"RISC-V 32-bit" },
-    { "RV64",	"RISC-V 64-bit" },
-    { "RV128",	"RISC-V 128-bit" },
-    { "E",	"Base embedded integer instructions (15 registers)" },
-    { "I",	"Base integer instructions (31 registers)" },
-    { "M",	"Hardware integer multiply and divide" },
-    { "A",	"Atomic memory operations" },
-    { "C",	"Compressed 16-bit instructions" },
-    { "F",	"Floating-point instructions, single-precision" },
-    { "D",	"Floating-point instructions, double-precision" },
-    { "Q",	"Floating-point instructions, quad-precision" },
-    { "B",	"Bit manipulation instructions" },
-    { "V",	"Vector operations" },
-    { "T",	"Transactional memory" },
-    { "P",	"Packed SIMD instructions" },
-    { "L",	"Decimal floating-point instructions" },
-    { "J",	"Dynamically translated languages" },
-    { "N",	"User-level interrupts" },
+    { "RV32",  N_("RISC-V 32-bit") },
+    { "RV64",  N_("RISC-V 64-bit") },
+    { "RV128", N_("RISC-V 128-bit") },
+    { "E",     N_("Base embedded integer instructions (15 registers)") },
+    { "I",     N_("Base integer instructions (31 registers)") },
+    { "M",     N_("Hardware integer multiply and divide") },
+    { "A",     N_("Atomic memory operations") },
+    { "C",     N_("Compressed 16-bit instructions") },
+    { "F",     N_("Floating-point instructions, single-precision") },
+    { "D",     N_("Floating-point instructions, double-precision") },
+    { "Q",     N_("Floating-point instructions, quad-precision") },
+    { "B",     N_("Bit manipulation instructions") },
+    { "V",     N_("Vector operations") },
+    { "T",     N_("Transactional memory") },
+    { "P",     N_("Packed SIMD instructions") },
+    { "L",     N_("Decimal floating-point instructions") },
+    { "J",     N_("Dynamically translated languages") },
+    { "N",     N_("User-level interrupts") },
     { NULL, NULL }
 };
 
@@ -73,8 +80,11 @@ const char *riscv_ext_meaning(const char *ext) {
         else
             l = strlen(ext);
         while(tab_ext_meaning[i].name != NULL) {
-            if (strncasecmp(tab_ext_meaning[i].name, ext, l) == 0)
-                return tab_ext_meaning[i].meaning;
+            if (strncasecmp(tab_ext_meaning[i].name, ext, l) == 0) {
+                if (tab_ext_meaning[i].meaning != NULL)
+                    return _(tab_ext_meaning[i].meaning);
+                else return NULL;
+            }
             i++;
         }
     }
