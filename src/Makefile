@@ -1,7 +1,7 @@
 
 CFLAGS = -O2 -Wall -Wextra -Wmissing-prototypes -Wstrict-prototypes -Werror=implicit-function-declaration -Werror=missing-prototypes
 
-objects = util.o fields.o arm_data.o cpu_arm.o x86_data.o cpu_x86.o cpu.o board_dt.o board_dmi.o board_rpi.o board.o
+objects = util.o fields.o arm_data.o cpu_arm.o x86_data.o cpu_x86.o riscv_data.o cpu_riscv.o cpu.o board_dt.o board_dmi.o board_rpi.o board.o
 
 rpiz-cli : rpiz-cli.c $(objects)
 	-rm rpiz-cli
@@ -13,11 +13,13 @@ rpiz-gtk : rpiz-gtk.c $(objects)
 
 util.o : util.h
 fields.o : fields.h
+riscv_data.o : riscv_data.h
+cpu_riscv.o : cpu_riscv.h riscv_data.o util.o fields.o
 arm_data.o : arm_data.h
 cpu_arm.o : cpu_arm.h arm_data.o util.o fields.o
 x86_data.o : x86_data.h
 cpu_x86.o : cpu_x86.h x86_data.o util.o fields.o
-cpu.o : cpu.h cpu_arm.o cpu_x86.o util.o fields.o
+cpu.o : cpu.h cpu_arm.o cpu_x86.o cpu_riscv.o util.o fields.o
 board_dt.o : board_dt.h util.o fields.o
 board_dmi.o : board_dmi.h util.o fields.o
 board_rpi.o : board_rpi.h board_dt.o util.o fields.o

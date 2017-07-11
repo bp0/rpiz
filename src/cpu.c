@@ -24,11 +24,14 @@
 #include "arm_data.h"
 #include "cpu_x86.h"
 #include "x86_data.h"
+#include "cpu_riscv.h"
+#include "riscv_data.h"
 
 typedef enum {
     PT_UNKNOWN = 0,
     PT_ARM,
     PT_X86,
+    PT_RISCV,
     PT_N_TYPES,
 } cpu_type;
 
@@ -37,6 +40,7 @@ struct {
     union {
         arm_proc *arm;
         x86_proc *x86;
+        riscv_proc *riscv;
     };
 } cpu;
 
@@ -53,6 +57,11 @@ int cpu_init() {
     cpu.type = PT_X86;
 #endif
 
+#if defined(__riscv32__) || defined(__riscv64__)
+    cpu.riscv = riscv_proc_new();
+    cpu.type = PT_RISCV;
+#endif
+
     return 1;
 }
 
@@ -63,6 +72,9 @@ void cpu_cleanup() {
             break;
         case (PT_X86):
             if (cpu.x86) x86_proc_free(cpu.x86);
+            break;
+        case (PT_RISCV):
+            if (cpu.riscv) riscv_proc_free(cpu.riscv);
             break;
         default:
             break;
@@ -75,6 +87,8 @@ const char *cpu_all_flags(void) {
             return arm_flag_list();
         case (PT_X86):
             return x86_flag_list();
+        case (PT_RISCV):
+            return riscv_ext_list();
         default:
             return NULL;
     }
@@ -86,6 +100,8 @@ int cpu_has_flag(const char *flag) {
             return arm_proc_has_flag(cpu.arm, flag);
         case (PT_X86):
             return x86_proc_has_flag(cpu.x86, flag);
+        case (PT_RISCV):
+            return riscv_proc_has_flag(cpu.riscv, flag);
         default:
             return 0;
     }
@@ -97,6 +113,8 @@ const char *cpu_flag_meaning(const char *flag) {
             return arm_flag_meaning(flag);
         case (PT_X86):
             return x86_flag_meaning(flag);
+        case (PT_RISCV):
+            return riscv_ext_meaning(flag);
         default:
             return NULL;
     }
@@ -108,6 +126,8 @@ rpiz_fields *cpu_fields() {
             return arm_proc_fields(cpu.arm);
         case (PT_X86):
             return x86_proc_fields(cpu.x86);
+        case (PT_RISCV):
+            return riscv_proc_fields(cpu.riscv);
         default:
             return NULL;
     }
