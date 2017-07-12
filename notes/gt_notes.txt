@@ -1,0 +1,11 @@
+
+#define _(String) gettext (String)
+#define gettext_noop(String) String
+#define N_(String) gettext_noop (String)
+#define C_(Ctx, String) pgettext (Ctx, String)
+#define NC_(Ctx, String) String
+
+/* xgettext -d rpiz -o rpiz.pot -k_ -kN_ -kC_:1c,2 -kNC_:1c,2 -c/ src/*_data.c
+ * msginit --locale=de --input=rpiz.pot
+ * msgmerge -N -f de.po
+ */
